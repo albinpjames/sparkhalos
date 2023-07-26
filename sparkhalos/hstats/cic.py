@@ -40,7 +40,10 @@ def normfun(x, sig, a):
 
 
 
-def cic_halos(params, redshift, nw_boxsize, totalbins):
+def cic_halos_old(params, redshift, nw_boxsize, totalbins):
+    """This CIC function was written to calculte the cic from halos without 
+    converting the astropy table to numpy arrays
+    """
     cutside = params.boxsize/nw_boxsize
     totalboxes = cutside**3
 
@@ -90,4 +93,54 @@ def cic_halos(params, redshift, nw_boxsize, totalbins):
             boxdata[i][f] = len(data_fil["N"][int((np.log10(data_fil["N"]) - np.log10(binedge[0]))/dm) == i])
 
 
+    return boxdata
+
+def cic_halos(data, params, redshift, nw_boxsize, totalbins):
+    cutside = int(params.boxsize/nw_boxsize)
+    totalboxes = int(cutside**3) 
+
+    binedge = np.logspace(
+        np.log(np.min(data["N"])),
+        np.log(np.max(data["N"])),
+        totalbins + 1,
+        base=math.e,
+    )
+
+    dm = np.log10(binedge[1])-np.log10(binedge[0])
+
+    data = np.array(data)
+    data = np.lib.recfunctions.structured_to_unstructured(data)
+    x = data[:,1:4]/nw_boxsize
+    x = x.astype(int)
+    
+    boxes = []
+    for i in range (len(x)):
+        boxes.append(x[i][0] + cutside*x[i][1] + cutside**2*x[i][2])
+
+    #Box halo numbers
+    boxdata = np.zeros(totalboxes)
+    for i in range(len(boxes)):
+        boxdata[i] += 1
+        
+    return boxdata
+
+
+def cic_particles(data, params, redshift, nw_boxsize, totalbins):
+    cutside = int(params.boxsize/nw_boxsize)
+    totalboxes = int(cutside**3) 
+
+    data = np.array(data)
+    data = np.lib.recfunctions.structured_to_unstructured(data)
+    x = data[:,1:4]/nw_boxsize
+    x = x.astype(int)
+    
+    boxes = []
+    for i in range (len(x)):
+        boxes.append(x[i][0] + cutside*x[i][1] + cutside**2*x[i][2])
+
+    #Box halo numbers
+    boxdata = np.zeros(totalboxes)
+    for i in range(len(boxes)):
+        boxdata[i] += 1
+        
     return boxdata
