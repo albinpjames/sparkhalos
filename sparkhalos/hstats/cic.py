@@ -129,18 +129,21 @@ def cic_particles(data, params, redshift, nw_boxsize, totalbins):
     cutside = int(params.boxsize/nw_boxsize)
     totalboxes = int(cutside**3) 
 
-    data = np.array(data)
-    data = np.lib.recfunctions.structured_to_unstructured(data)
-    x = data[:,1:4]/nw_boxsize
+    data += params.boxsize / 2
+    x = data[:,0:3]/nw_boxsize
+    del data
+    print("converting to end")
     x = x.astype(int)
     
     boxes = []
+    print("caclulating boxes")
     for i in range (len(x)):
         boxes.append(x[i][0] + cutside*x[i][1] + cutside**2*x[i][2])
 
     #Box halo numbers
+    
     boxdata = np.zeros(totalboxes)
-    for i in range(len(boxes)):
+    for i in boxes:
         boxdata[i] += 1
         
     return boxdata
