@@ -2,14 +2,20 @@
 """
 
 # Choose the simulation to be used
-# from sparkhalos.simulprocess import test_rand as simulation
-from sparkhalos.simulprocess import abacussummit as simulation
+from sparkhalos.simulprocess import test_rand as simulation
+# from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
+from sparkhalos.hstats.fitfun import pois, normfun
+
+
 from mpl_toolkits import mplot3d
 from scipy.stats import binned_statistic_dd 
+
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
 import numpy as np
 import random
 
@@ -28,7 +34,7 @@ totalbins = 50
 
 # The new box size & Bins for computing count in cells distribution
 nw_boxsize = 25
-cicbins = 10
+cicbins = 15
 
 # Choose the method for calculating the cic
 cic_method = "manual"
@@ -45,8 +51,8 @@ for redshift in redshifts:
             field = simulation.readfieldrv(params, redshift)
             print("reading data complete")
     
-    # particles_taken = [100000, 1000000, 6000000, 10000000]
-    particles_taken = [100000]
+    particles_taken = [100000, 1000000, 6000000, 10000000]
+    # particles_taken = [100, 1000, 5000, 50000, 10000]
     cutside = int(params.boxsize/nw_boxsize)
     totalboxes = int(cutside**3) 
 
@@ -56,23 +62,32 @@ for redshift in redshifts:
 
     # Intalizing the figure
     print("The figure is intalised")
-    plt.figure(figsize=(15, 12))
-    plt.subplots_adjust(hspace=0.2)
-    plt.suptitle("CIC From Field Particles", fontsize=18, y=0.95)
+    plt.figure(figsize=(10, 18))
+    plt.subplots_adjust(left=0.1,
+        bottom=0.1,
+        right=0.9,
+        top=0.8,
+        wspace=0.2,
+        hspace=0.5)
+    plt.suptitle("CIC From Field Particles", fontsize=15, y=0.95)
 
     ax = plt.subplot(nrows, ncols, 1)
+    ax.axis('off')
     ax.text(0.05, 0.3, 'Simulation: ' + str(params.name) +
-                             '\nCosmology: LCDM' +
+                             '\nCosmology: LCDM' + 
                              '\nRedshift: ' + str(redshift) + 
                              '\nBox Length: ' + str(params.boxsize) + ' MPc/h' +
                              '\n\nSub Box Length: ' + str(nw_boxsize) + ' MPc/h' +
                              '\nTotal Number Of Sub Boxes: ' + str(totalboxes) +
                              '\n\nNumber Of Bins: ' + str(cicbins) +
-                             '\n\nMethod used : ' + str(cic_method) 
+                             '\n\nCIC method used : ' + str(cic_method),
+                             fontsize=10 
                              )
 
 
     for p, n in enumerate(particles_taken): 
+        # p is to find the row and column in subplot
+        # n is the number of particles taken
 
         # Choosing the particles for which the CIC Is to be calculated
         match params.name:
@@ -119,13 +134,24 @@ for redshift in redshifts:
         
         # Plotting the data
         ax = plt.subplot(nrows, ncols, p+2)
-        y_value, binedges, patches = ax.hist(boxdata, bins = cicbins, density=True, facecolor = '#2ab0ff', edgecolor='#169acf', linewidth=0.5, alpha = 1)
+        y_value, binedges, patches = ax.hist(boxdata, bins = cicbins, density=True, facecolor = '#2ab0ff', edgecolor='#169acf', linewidth=0.5, alpha = 0.5)
         x_value = (0.5*(binedges[1:] + binedges[:-1]))
+        ax.set_title(f"CIC Computed for {n} particles")
         
         # Calculating the error 
         y_valueerr, binedgeserr = np.histogram(boxdata, bins=cicbins)
         errorbar = np.sqrt(y_valueerr)/((binedges[1]-binedges[0])*np.sum(y_valueerr))
         ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
+
+        # Curve Fitting Poisson
+        popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
+        ax.plot(x_value, pois(x_value, *popt_pois), 'b-', label='Poisson (Fit): n=%5.3f' % tuple(popt_pois))
+
+        # Curve Fitting Normal Dist
+        popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
+        ax.plot(x_value, normfun(x_value, *popt_norm), 'g-', label='Normal (Fit): n=%5.3f, sig=%5.3f' % tuple(popt_norm))
+
+        ax.legend(loc="upper right")
         
 plt.show()
 
