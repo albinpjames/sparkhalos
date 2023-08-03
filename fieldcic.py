@@ -51,8 +51,8 @@ for redshift in redshifts:
             field = simulation.readfieldrv(params, redshift)
             print("reading data complete")
     
-    particles_taken = [100000, 1000000, 6000000, 10000000]
-    # particles_taken = [100, 1000, 5000, 50000, 10000]
+    # particles_taken = [100000, 1000000, 6000000, 10000000]
+    particles_taken = [100, 1000, 5000, 50000, 10000]
     cutside = int(params.boxsize/nw_boxsize)
     totalboxes = int(cutside**3) 
 
@@ -62,7 +62,7 @@ for redshift in redshifts:
 
     # Intalizing the figure
     print("The figure is intalised")
-    plt.figure(figsize=(10, 18))
+    plt.figure(figsize=(10, 16), dpi=150)
     plt.subplots_adjust(left=0.1,
         bottom=0.1,
         right=0.9,
@@ -145,13 +145,13 @@ for redshift in redshifts:
 
         # Curve Fitting Poisson
         popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
-        ax.plot(x_value, pois(x_value, *popt_pois), 'b-', label='Poisson (Fit): n=%5.3f' % tuple(popt_pois))
+        ax.plot(x_value, pois(x_value, *popt_pois), 'b-', label='Poisson (Fit): \nn=%5.3f' % tuple(popt_pois))
 
         # Curve Fitting Normal Dist
         popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
-        ax.plot(x_value, normfun(x_value, *popt_norm), 'g-', label='Normal (Fit): n=%5.3f, sig=%5.3f' % tuple(popt_norm))
+        ax.plot(x_value, normfun(x_value, *popt_norm), 'g-', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
 
-        ax.legend(loc="upper right")
+        ax.legend(loc="upper right", fontsize=5)
         
 plt.show()
 
