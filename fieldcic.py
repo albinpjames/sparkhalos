@@ -2,22 +2,39 @@
 """
 
 # Choose the simulation to be used
-from sparkhalos.simulprocess import test_rand as simulation
-# from sparkhalos.simulprocess import abacussummit as simulation
+# from sparkhalos.simulprocess import test_rand as simulation
+from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
 from sparkhalos.hstats.fitfun import pois, normfun
 
-
-from mpl_toolkits import mplot3d
 from scipy.stats import binned_statistic_dd 
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy.optimize import curve_fit
 
+from astropy.table import vstack
 import numpy as np
 import random
+
+def dataplot(data):
+    """To verify the data points in space
+    """
+    from mpl_toolkits import mplot3d
+    # Creating figure
+    fig = plt.figure(figsize = (10, 7))
+    ax = plt.axes(projection ="3d")
+     
+
+    # Creating plot
+    ax.scatter3D(data[:,0],data[:,1], data[:,2], color = "green", s = 1)
+    plt.title("Scatter Plot to test data points")
+     
+    # show plot
+    print("showing plot")
+    plt.show()
 
 # The location of where the data is stored.
 datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
@@ -26,24 +43,27 @@ datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
 params = SimuParams.init(datalocation, simulation.simparams)
 
 # Redshifts to be computed 
-# redshifts = ["3.000","2.000","1.100","0.500","0.200"]
-redshifts = ["1.400"]
-
-# The total bins taken while calculation of HMF
-totalbins = 50
+# redshifts = ["3.000","2.500","2.000"]
+redshifts = ["3.000"]
 
 # The new box size & Bins for computing count in cells distribution
-nw_boxsize = 25
+# nw_boxsizes = [25]
+nw_boxsizes = [10,20,25,50]
 cicbins = 15
 
 # Choose the method for calculating the cic
 cic_method = "manual"
-
+ 
+# Number of particles taken or generated     
+# particles_taken = [100000, 1000000, 6000000, 10000000]
+particles_taken = 1000000
 
 for redshift in redshifts:
     ''' Here we are trying to calculate the CIC for various number of 
     particles generated at random.
     '''
+
+    # Here the data is read to be processed
     match params.name:
         case "test_randomnum":
             print( "Data is not read but generated on the go")
@@ -51,14 +71,10 @@ for redshift in redshifts:
             field = simulation.readfieldrv(params, redshift)
             print("reading data complete")
     
-    # particles_taken = [100000, 1000000, 6000000, 10000000]
-    particles_taken = [100, 1000, 5000, 50000, 10000]
-    cutside = int(params.boxsize/nw_boxsize)
-    totalboxes = int(cutside**3) 
 
     # For ploting find minimium required rows given we want 2 columns 
     ncols = 2
-    nrows = len(particles_taken) // ncols + 1
+    nrows = len(nw_boxsizes) // ncols + 1
 
     # Intalizing the figure
     print("The figure is intalised")
@@ -77,29 +93,34 @@ for redshift in redshifts:
                              '\nCosmology: LCDM' + 
                              '\nRedshift: ' + str(redshift) + 
                              '\nBox Length: ' + str(params.boxsize) + ' MPc/h' +
-                             '\n\nSub Box Length: ' + str(nw_boxsize) + ' MPc/h' +
-                             '\nTotal Number Of Sub Boxes: ' + str(totalboxes) +
+                             # '\n\nSub Box Length: ' + str(nw_boxsize) + ' MPc/h' +
+                             # '\nTotal Number Of Sub Boxes: ' + str(totalboxes) +
+                             '\nNumber of particles taken: ' + str(particles_taken) +
                              '\n\nNumber Of Bins: ' + str(cicbins) +
                              '\n\nCIC method used : ' + str(cic_method),
                              fontsize=10 
                              )
 
+    # Choosing the particles for which the CIC Is to be calculated
+    match params.name:
+        case "test_randomnum":
+            data = simulation.generate_xyz(params,particles_taken)
+            print("The data is simulated for test_rand")
 
-    for p, n in enumerate(particles_taken): 
+        case "abacussummit":
+            randomlist = random.sample(range(0, len(field)), particles_taken)
+            data = field['pos'][randomlist]
+            data += params.boxsize / 2
+            print(f"Random {particles_taken} data points are choosen for abacussummit")
+            # dataplot(data)
+
+    for p, nw_boxsize in enumerate(nw_boxsizes): 
         # p is to find the row and column in subplot
-        # n is the number of particles taken
+        # n is the new boxsize
 
-        # Choosing the particles for which the CIC Is to be calculated
-        match params.name:
-            case "test_randomnum":
-                data = simulation.generate_xyz(params,n)
-                print("The data is simulated for test_rand")
-
-            case "abacussummit":
-                randomlist = random.sample(range(0, len(field)), n)
-                data = field['pos'][randomlist]
-                data += params.boxsize / 2
-                print(f"Random {n} data points are choosen for abacussummit")
+        # We calcualte the number of boxes to which the simulation is divided into
+        cutside = int(params.boxsize/nw_boxsize)
+        totalboxes = int(cutside**3) 
         
         # Choosing the CIC Calculation method
         match cic_method:
@@ -111,7 +132,7 @@ for redshift in redshifts:
                 x = x.astype(int)
 
                 boxes = []
-                print(f"caclulating boxes {n} for particles")
+                print("caclulating boxes for particles")
                 
                 for i in range (len(x)):
                     
@@ -132,11 +153,18 @@ for redshift in redshifts:
                 print("Code to be updated")    
                 # boxdata = binned_statistic_dd(data, statistic = 'count', bins =)
         
+        cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (params.boxsize**3)
+        celldensity = (boxdata - cell_avg)/cell_avg
+        oldboxdata = boxdata
+        boxdata = celldensity
+
+        # break
+
         # Plotting the data
         ax = plt.subplot(nrows, ncols, p+2)
         y_value, binedges, patches = ax.hist(boxdata, bins = cicbins, density=True, facecolor = '#2ab0ff', edgecolor='#169acf', linewidth=0.5, alpha = 0.5)
         x_value = (0.5*(binedges[1:] + binedges[:-1]))
-        ax.set_title(f"CIC Computed for {n} particles")
+        ax.set_title(f"CIC Computed for {nw_boxsize} sub box size")
         
         # Calculating the error 
         y_valueerr, binedgeserr = np.histogram(boxdata, bins=cicbins)
@@ -144,31 +172,18 @@ for redshift in redshifts:
         ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
 
         # Curve Fitting Poisson
-        popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
-        ax.plot(x_value, pois(x_value, *popt_pois), 'b-', label='Poisson (Fit): \nn=%5.3f' % tuple(popt_pois))
+        # popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
+        # ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b-', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
 
         # Curve Fitting Normal Dist
-        popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
-        ax.plot(x_value, normfun(x_value, *popt_norm), 'g-', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
+        # popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
+        # ax.plot(x_value, normfun(x_value, *popt_norm), 'g-', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
 
         ax.legend(loc="upper right", fontsize=5)
         
 plt.show()
 
-def dataplot():
-    """To verify the data points in space
-    """
-    # Creating figure
-    fig = plt.figure(figsize = (10, 7))
-    ax = plt.axes(projection ="3d")
-     
 
-    # Creating plot
-    ax.scatter3D(data[:,0],data[:,1], data[:,2], color = "green", s = 1)
-    plt.title(f"For redshift {redshift}, taking {n} random points from {len(field)} data points")
-     
-    # show plot
-    plt.show()
 
 
 

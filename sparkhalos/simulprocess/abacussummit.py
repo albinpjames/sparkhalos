@@ -6,10 +6,10 @@ Paper: https://academic.oup.com/mnras/article/508/3/4017/6366248?login=true
 """
 simparams = {
     "name": "abacussummit",  # The name of the simulation
-    "type": "small",  # The type of simulation (base, small for abacussumit)
+    "type": "hugebase",  # The type of simulation (base, small for abacussumit)
     "cosmo": "c000",  # The cosmology used in the simulation
-    "intcont": "ph3000",  # The initial condition used for the simulation
-    "boxsize": 500,  # The box size of the simulation
+    "intcont": "ph000",  # The initial condition used for the simulation
+    "boxsize": 2000,  # The box size of the simulation
     "fno_s": 0,  # If data fragamneted to multiple files, starting file number
     "fno_e": 33,  # If data fragamneted to multiple files, ending file number
     "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
@@ -48,6 +48,7 @@ from astropy.table import Table, vstack
 from astropy.io import ascii
 from astropy.table import Column
 import os
+from pathlib import Path
 
 from abacusnbody.data.read_abacus import read_asdf
 
@@ -180,7 +181,7 @@ def readfieldrv(params, redshift):
     print("Reading the data")
 
     # Location of the data
-    file = os.path.join(
+    path = os.path.join(
         params.datadirec,
         "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
         + params.type
@@ -189,10 +190,18 @@ def readfieldrv(params, redshift):
         + "_"
         + params.intcont,
         "halos/z" + redshift,
-        "field_rv_A/field_rv_A_000.asdf",
+        "field_rv_A",
     )
 
-    cat = read_asdf(file, cleaned=False)  # Reads the data
+    files = Path(path).glob('*.asdf')
+    for i, file in enumerate(files):
+        if i == 0:
+            cat = read_asdf(file, cleaned=False)
+        else:
+            print(f"reading {i} file")
+            cat_read = read_asdf(file, cleaned=False) # Reads the data
+            cat =  vstack([cat, cat_read])
+            del cat_read
     # data = cat.halos[clms]  # Reads the given column and saves it to an array
     # del cat  # Deleting complete loaded data to save memory
 

@@ -16,6 +16,7 @@ gsl = "^0.0.3"
 corrfunc = "^2.5.0"
 abacusutils = "^1.3.0"
 pandas = "^2.0.3"
+seaborn = "^0.12.2"
 
 
 [tool.poetry.group.dev.dependencies]
