@@ -12,7 +12,6 @@ from sparkhalos.hstats.fitfun import pois, normfun
 from scipy.stats import binned_statistic_dd 
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy.optimize import curve_fit
 
 from astropy.table import vstack
@@ -37,7 +36,7 @@ def dataplot(data):
     plt.show()
 
 # The location of where the data is stored.
-datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
+datalocation = "/home/darkmatter/Documents/Albin/DATA"
 
 # Intilaises the simulation parameters for the simulation
 params = SimuParams.init(datalocation, simulation.simparams)
@@ -49,14 +48,14 @@ redshifts = ["3.000"]
 # The new box size & Bins for computing count in cells distribution
 # nw_boxsizes = [25]
 nw_boxsizes = [10,20,25,50]
-cicbins = 15
+cicbins = 20
 
 # Choose the method for calculating the cic
 cic_method = "manual"
  
 # Number of particles taken or generated     
 # particles_taken = [100000, 1000000, 6000000, 10000000]
-particles_taken = 1000000
+particles_taken = 100000000
 
 for redshift in redshifts:
     ''' Here we are trying to calculate the CIC for various number of 
@@ -70,6 +69,8 @@ for redshift in redshifts:
         case "abacussummit":
             field = simulation.readfieldrv(params, redshift)
             print("reading data complete")
+            # particles_taken = len(field)
+
     
 
     # For ploting find minimium required rows given we want 2 columns 
@@ -108,11 +109,18 @@ for redshift in redshifts:
             print("The data is simulated for test_rand")
 
         case "abacussummit":
-            randomlist = random.sample(range(0, len(field)), particles_taken)
-            data = field['pos'][randomlist]
-            data += params.boxsize / 2
-            print(f"Random {particles_taken} data points are choosen for abacussummit")
-            # dataplot(data)
+            if particles_taken >= len(field):
+                data = field['pos']
+                data += params.boxsize / 2
+                print(f"Random {particles_taken} data points are choosen for abacussummit")
+                # dataplot(data)
+            
+            else:    
+                randomlist = random.sample(range(0, len(field)), particles_taken)
+                data = field['pos'][randomlist]
+                data += params.boxsize / 2
+                print(f"Random {particles_taken} data points are choosen for abacussummit")
+                # dataplot(data)
 
     for p, nw_boxsize in enumerate(nw_boxsizes): 
         # p is to find the row and column in subplot
