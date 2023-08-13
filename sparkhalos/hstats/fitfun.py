@@ -23,6 +23,15 @@ def gqed(x, a, b):
 def gqed_b(n_corr):
     return 1 - (np.mean(n_corr) + 1) ** (-0.5)
 
+def gev(x, nu_g, sig_g, xi)
+    t = np.exp( (-1 / xi) 
+                * np.log(1 + (xi * (np.log(x) - nu_g) / sig_g))
+               )
+    return np.exp(np.log(1) 
+              - np.log((1 + x) * sig_g) 
+              + (1 + xi) * t
+              - t )
+
 
 # Poisson --------------------------------------------------------------------------------------------------
 def pois(x, a):

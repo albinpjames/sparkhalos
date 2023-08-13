@@ -2,12 +2,12 @@
 """
 
 # Choose the simulation to be used
-# from sparkhalos.simulprocess import test_rand as simulation
-from sparkhalos.simulprocess import abacussummit as simulation
+from sparkhalos.simulprocess import test_rand as simulation
+# from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
-from sparkhalos.hstats.fitfun import pois, normfun
+from sparkhalos.hstats.fitfun import pois, normfun, gev
 
 from scipy.stats import binned_statistic_dd 
 
@@ -36,6 +36,7 @@ def dataplot(data):
     plt.show()
 
 # The location of where the data is stored.
+# datalocation = "/home/darkmatter/Documents/Albin/DATA"
 datalocation = "/home/darkmatter/Documents/Albin/DATA"
 
 # Intilaises the simulation parameters for the simulation
@@ -52,10 +53,11 @@ cicbins = 20
 
 # Choose the method for calculating the cic
 cic_method = "manual"
+cic_method = "binned_stat"
  
 # Number of particles taken or generated     
 # particles_taken = [100000, 1000000, 6000000, 10000000]
-particles_taken = 100000000
+particles_taken = 1000000
 
 for redshift in redshifts:
     ''' Here we are trying to calculate the CIC for various number of 
@@ -65,11 +67,26 @@ for redshift in redshifts:
     # Here the data is read to be processed
     match params.name:
         case "test_randomnum":
-            print( "Data is not read but generated on the go")
+            data = simulation.generate_xyz(params,particles_taken)
+            print("The data is simulated for test_rand")
+
         case "abacussummit":
             field = simulation.readfieldrv(params, redshift)
             print("reading data complete")
             # particles_taken = len(field)
+
+            if particles_taken >= len(field):
+                data = field['pos']
+                data += params.boxsize / 2
+                print(f"All data points are choosen for abacussummit")
+                # dataplot(data)
+            
+            else:    
+                randomlist = random.sample(range(0, len(field)), particles_taken)
+                data = field['pos'][randomlist]
+                data += params.boxsize / 2
+                print(f"Random {particles_taken} data points are choosen for abacussummit")
+                # dataplot(data)
 
     
 
@@ -79,7 +96,7 @@ for redshift in redshifts:
 
     # Intalizing the figure
     print("The figure is intalised")
-    plt.figure(figsize=(10, 16), dpi=150)
+    plt.figure(figsize=(8, nrows * 3), dpi=150)
     plt.subplots_adjust(left=0.1,
         bottom=0.1,
         right=0.9,
@@ -101,26 +118,6 @@ for redshift in redshifts:
                              '\n\nCIC method used : ' + str(cic_method),
                              fontsize=10 
                              )
-
-    # Choosing the particles for which the CIC Is to be calculated
-    match params.name:
-        case "test_randomnum":
-            data = simulation.generate_xyz(params,particles_taken)
-            print("The data is simulated for test_rand")
-
-        case "abacussummit":
-            if particles_taken >= len(field):
-                data = field['pos']
-                data += params.boxsize / 2
-                print(f"Random {particles_taken} data points are choosen for abacussummit")
-                # dataplot(data)
-            
-            else:    
-                randomlist = random.sample(range(0, len(field)), particles_taken)
-                data = field['pos'][randomlist]
-                data += params.boxsize / 2
-                print(f"Random {particles_taken} data points are choosen for abacussummit")
-                # dataplot(data)
 
     for p, nw_boxsize in enumerate(nw_boxsizes): 
         # p is to find the row and column in subplot
@@ -157,17 +154,25 @@ for redshift in redshifts:
                 for i in boxes:
                     boxdata[i] += 1
         
-            case "binned_stat":
-                print("Code to be updated")    
-                # boxdata = binned_statistic_dd(data, statistic = 'count', bins =)
+            case "binned_stat":  
+                x_bins_dd = np.arange(0,params.boxsize + nw_boxsize, nw_boxsize) 
+                y_bins_dd = np.arange(0,params.boxsize + nw_boxsize, nw_boxsize) 
+                z_bins_dd = np.arange(0,params.boxsize + nw_boxsize, nw_boxsize) 
+                # z_bins_dd = np.arange(0,200 + nw_boxsize, nw_boxsize) 
+                boxdata = binned_statistic_dd([np.array(data[:,0]),np.array(data[:,1]),np.array(data[:,2])]
+                    ,values = None, statistic = 'count', 
+                    bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
+
+                boxdata = boxdata.ravel()
         
-        cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (params.boxsize**3)
-        celldensity = (boxdata - cell_avg)/cell_avg
-        oldboxdata = boxdata
-        boxdata = celldensity
+        # cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (params.boxsize**3)
+        # celldensity = (boxdata - cell_avg)/cell_avg
+        # oldboxdata = boxdata
+        # boxdata = celldensity
 
         # break
 
+        # cicbins = np.arange(min(boxdata),max(boxdata),1)
         # Plotting the data
         ax = plt.subplot(nrows, ncols, p+2)
         y_value, binedges, patches = ax.hist(boxdata, bins = cicbins, density=True, facecolor = '#2ab0ff', edgecolor='#169acf', linewidth=0.5, alpha = 0.5)
@@ -178,10 +183,14 @@ for redshift in redshifts:
         y_valueerr, binedgeserr = np.histogram(boxdata, bins=cicbins)
         errorbar = np.sqrt(y_valueerr)/((binedges[1]-binedges[0])*np.sum(y_valueerr))
         ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
+        
+        # Curve Fitting GEV
+        popt_pois, pcov_pois = curve_fit(gev, x_value, y_value)
+        ax.plot(x_value, gev(x_value, *popt_norm), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_norm))
 
         # Curve Fitting Poisson
-        # popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
-        # ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b-', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
+        popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
+        ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
 
         # Curve Fitting Normal Dist
         # popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
@@ -189,7 +198,7 @@ for redshift in redshifts:
 
         ax.legend(loc="upper right", fontsize=5)
         
-plt.show()
+    plt.show()
 
 
 
