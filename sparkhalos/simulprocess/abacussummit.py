@@ -208,3 +208,30 @@ def readfieldrv(params, redshift):
     # return data  # Returning the requested colums
     return cat
 
+def readfieldrv_test(params, redshift):
+    """This function reads the data from abacus summit simulation as a whole,
+    this should be used when enough memory is available to load the complete
+    data and process it together.
+    """
+    print("Reading the data")
+
+    # Location of the data
+    path = os.path.join(
+        params.datadirec,
+        "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+        + params.type
+        + "_"
+        + params.cosmo
+        + "_"
+        + params.intcont,
+        "halos/z" + redshift,
+        "field_rv_A",
+    )
+    cat = read_asdf(path + "/field_rv_A_000.asdf", cleaned=False)
+
+    # data = cat.halos[clms]  # Reads the given column and saves it to an array
+    # del cat  # Deleting complete loaded data to save memory
+
+    # return data  # Returning the requested colums
+    return cat
+

@@ -23,7 +23,7 @@ def gqed(x, a, b):
 def gqed_b(n_corr):
     return 1 - (np.mean(n_corr) + 1) ** (-0.5)
 
-def gev(x, nu_g, sig_g, xi)
+def gev(x, nu_g, sig_g, xi):
     t = np.exp( (-1 / xi) 
                 * np.log(1 + (xi * (np.log(x) - nu_g) / sig_g))
                )

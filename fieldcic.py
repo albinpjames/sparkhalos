@@ -2,8 +2,8 @@
 """
 
 # Choose the simulation to be used
-from sparkhalos.simulprocess import test_rand as simulation
-# from sparkhalos.simulprocess import abacussummit as simulation
+# from sparkhalos.simulprocess import test_rand as simulation
+from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
@@ -36,8 +36,8 @@ def dataplot(data):
     plt.show()
 
 # The location of where the data is stored.
+datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
 # datalocation = "/home/darkmatter/Documents/Albin/DATA"
-datalocation = "/home/darkmatter/Documents/Albin/DATA"
 
 # Intilaises the simulation parameters for the simulation
 params = SimuParams.init(datalocation, simulation.simparams)
@@ -52,12 +52,13 @@ nw_boxsizes = [10,20,25,50]
 cicbins = 20
 
 # Choose the method for calculating the cic
-cic_method = "manual"
+# cic_method = "manual"
 cic_method = "binned_stat"
  
 # Number of particles taken or generated     
 # particles_taken = [100000, 1000000, 6000000, 10000000]
-particles_taken = 1000000
+particles_taken = 10000000
+density_contrast = True
 
 for redshift in redshifts:
     ''' Here we are trying to calculate the CIC for various number of 
@@ -71,7 +72,8 @@ for redshift in redshifts:
             print("The data is simulated for test_rand")
 
         case "abacussummit":
-            field = simulation.readfieldrv(params, redshift)
+            # field = simulation.readfieldrv(params, redshift)
+            field = simulation.readfieldrv_test(params, redshift)
             print("reading data complete")
             # particles_taken = len(field)
 
@@ -155,9 +157,11 @@ for redshift in redshifts:
                     boxdata[i] += 1
         
             case "binned_stat":  
-                x_bins_dd = np.arange(0,params.boxsize + nw_boxsize, nw_boxsize) 
-                y_bins_dd = np.arange(0,params.boxsize + nw_boxsize, nw_boxsize) 
-                z_bins_dd = np.arange(0,params.boxsize + nw_boxsize, nw_boxsize) 
+                # size = params.boxsize
+                size = 200
+                x_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
+                y_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
+                z_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 # z_bins_dd = np.arange(0,200 + nw_boxsize, nw_boxsize) 
                 boxdata = binned_statistic_dd([np.array(data[:,0]),np.array(data[:,1]),np.array(data[:,2])]
                     ,values = None, statistic = 'count', 
@@ -165,10 +169,13 @@ for redshift in redshifts:
 
                 boxdata = boxdata.ravel()
         
-        # cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (params.boxsize**3)
-        # celldensity = (boxdata - cell_avg)/cell_avg
-        # oldboxdata = boxdata
-        # boxdata = celldensity
+        if density_contrast:
+            # size = params.boxsize
+            size = 200
+            cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (size**3)
+            celldensity = (boxdata - cell_avg)/cell_avg
+            oldboxdata = boxdata
+            boxdata = celldensity
 
         # break
 
@@ -185,12 +192,12 @@ for redshift in redshifts:
         ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
         
         # Curve Fitting GEV
-        popt_pois, pcov_pois = curve_fit(gev, x_value, y_value)
-        ax.plot(x_value, gev(x_value, *popt_norm), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_norm))
+        popt_gev, pcov_gev = curve_fit(gev, x_value, y_value)
+        ax.plot(x_value, gev(x_value, *popt_gev), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_gev))
 
         # Curve Fitting Poisson
-        popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
-        ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
+        # popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
+        # ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
 
         # Curve Fitting Normal Dist
         # popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )

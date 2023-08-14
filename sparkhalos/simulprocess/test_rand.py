@@ -56,6 +56,7 @@ def generate_xyz(params, numbPoints):
     xx = np.random.uniform(0, params.boxsize, size=(numbPoints))
     yy = np.random.uniform(0, params.boxsize, size=(numbPoints))
     zz = np.random.uniform(0, params.boxsize, size=(numbPoints))
+    # zz = np.random.uniform(0, 200, size=(numbPoints))
 
     data = np.column_stack((xx,yy,zz))
 
