@@ -7,7 +7,7 @@ from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
-from sparkhalos.hstats.fitfun import pois, normfun, gev
+from sparkhalos.hstats.fitfun import pois, normfun, gev, gevold
 
 from scipy.stats import binned_statistic_dd 
 
@@ -36,8 +36,8 @@ def dataplot(data):
     plt.show()
 
 # The location of where the data is stored.
-datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
-# datalocation = "/home/darkmatter/Documents/Albin/DATA"
+# datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
+datalocation = "/home/darkmatter/Documents/Albin/DATA"
 
 # Intilaises the simulation parameters for the simulation
 params = SimuParams.init(datalocation, simulation.simparams)
@@ -72,9 +72,10 @@ for redshift in redshifts:
             print("The data is simulated for test_rand")
 
         case "abacussummit":
-            # field = simulation.readfieldrv(params, redshift)
-            field = simulation.readfieldrv_test(params, redshift)
+            field = simulation.readfieldrv(params, redshift)
+            # field = simulation.readfieldrv_test(params, redshift)
             print("reading data complete")
+            print(len(field))
             # particles_taken = len(field)
 
             if particles_taken >= len(field):
@@ -157,8 +158,8 @@ for redshift in redshifts:
                     boxdata[i] += 1
         
             case "binned_stat":  
-                # size = params.boxsize
-                size = 200
+                size = params.boxsize
+                # size = 200
                 x_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 y_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 z_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
@@ -170,8 +171,8 @@ for redshift in redshifts:
                 boxdata = boxdata.ravel()
         
         if density_contrast:
-            # size = params.boxsize
-            size = 200
+            size = params.boxsize
+            # size = 200
             cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (size**3)
             celldensity = (boxdata - cell_avg)/cell_avg
             oldboxdata = boxdata
@@ -185,6 +186,7 @@ for redshift in redshifts:
         y_value, binedges, patches = ax.hist(boxdata, bins = cicbins, density=True, facecolor = '#2ab0ff', edgecolor='#169acf', linewidth=0.5, alpha = 0.5)
         x_value = (0.5*(binedges[1:] + binedges[:-1]))
         ax.set_title(f"CIC Computed for {nw_boxsize} sub box size")
+        # x_value = abs(x_value)
         
         # Calculating the error 
         y_valueerr, binedgeserr = np.histogram(boxdata, bins=cicbins)
@@ -192,7 +194,7 @@ for redshift in redshifts:
         ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
         
         # Curve Fitting GEV
-        popt_gev, pcov_gev = curve_fit(gev, x_value, y_value)
+        popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata),1))
         ax.plot(x_value, gev(x_value, *popt_gev), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_gev))
 
         # Curve Fitting Poisson

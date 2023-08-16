@@ -25,12 +25,16 @@ def gqed_b(n_corr):
 
 def gev(x, nu_g, sig_g, xi):
     t = np.exp( (-1 / xi) 
-                * np.log(1 + (xi * (np.log(x) - nu_g) / sig_g))
+                * np.log(1 + (xi * ( (np.log(x+1) - nu_g) / sig_g) ))
                )
-    return np.exp(np.log(1) 
-              - np.log((1 + x) * sig_g) 
-              + (1 + xi) * t
+    return np.exp( 
+              - np.log(sig_g) 
+              + (1 + xi) * np.log(t)
               - t )
+
+def gevold(x, nu_g, sig_g, xi):
+    t = (1 + (xi *(np.log(x+1) - nu_g)/sig_g) )
+    return ( t ** (1 + xi) * np.exp(-t) ) / sig_g
 
 
 # Poisson --------------------------------------------------------------------------------------------------
