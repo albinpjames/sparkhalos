@@ -7,9 +7,12 @@ from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
-from sparkhalos.hstats.fitfun import pois, normfun, gev, gevold
+from sparkhalos.hstats.fitfun import pois, normfun, gev, gev_mod
 
 from scipy.stats import binned_statistic_dd 
+from scipy.stats import skew
+from scipy.stats import genextreme
+
 
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
@@ -192,10 +195,15 @@ for redshift in redshifts:
         y_valueerr, binedgeserr = np.histogram(boxdata, bins=cicbins)
         errorbar = np.sqrt(y_valueerr)/((binedges[1]-binedges[0])*np.sum(y_valueerr))
         ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
+
+        # Curve Fitting GEV SciPy
+        popt_gev, pcov_gev = genextreme.fit(x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata),skew(boxdata)))
+        ax.plot(x_value, genextreme.pdf(x_value, *popt_gev), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_gev))
+
         
         # Curve Fitting GEV
-        popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata),1))
-        ax.plot(x_value, gev(x_value, *popt_gev), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_gev))
+        # popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata),skew(boxdata)))
+        # ax.plot(x_value, gev(x_value, *popt_gev), 'g--', label='GEV (Fit): \nnu_g=%5.3f, sig_g=%5.3f, xi=%5.3f' % tuple(popt_gev))
 
         # Curve Fitting Poisson
         # popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
