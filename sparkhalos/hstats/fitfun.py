@@ -23,6 +23,8 @@ def gqed(x, a, b):
 def gqed_b(n_corr):
     return 1 - (np.mean(n_corr) + 1) ** (-0.5)
 
+# GEV -------------------------------------------------------
+
 def gev_mod(x, nu_g, sig_g, xi):
     t = np.exp( (-1 / xi) 
                 * np.log(1 + (xi * ( (np.log(x+1) - nu_g) / sig_g) ))
@@ -36,6 +38,9 @@ def gev(x, xi, nu_g, sig_g):
     t = (1 + (xi *(x - nu_g)/sig_g)) ** (-1/xi)
     return (( t ** (1 + xi) * np.exp(-t) ) / sig_g) 
 
+# Log Normal ---------------------------------------------------------------------------------------------
+def lnnorm(x, nu, sig):
+    return np.exp((-1/2) * ((np.log(x)-nu)/sig)**2) / (x * sig * np.sqrt(2*np.pi))
 
 # Poisson --------------------------------------------------------------------------------------------------
 def pois(x, a):

@@ -7,7 +7,7 @@ from sparkhalos.simulprocess import abacussummit as simulation
 
 from sparkhalos.simulprocess.simparams import SimuParams
 from sparkhalos.hstats.cic import cic_particles
-from sparkhalos.hstats.fitfun import pois, normfun, gev, gev_mod
+from sparkhalos.hstats.fitfun import pois, normfun, gev, lnnorm
 
 from scipy.stats import binned_statistic_dd 
 from scipy.stats import skew
@@ -100,10 +100,15 @@ for p, nw_boxsize in enumerate(nw_boxsizes):
 	# Curve Fitting GEV
 	print(f"Calculating fitting for GEV {nw_boxsize}")
 	popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata)))
-	# popt_gev, pcov_gev = curve_fit(gev, x_value, y_value)
 	print(f"Plotting GEV {nw_boxsize}")
 	ax.plot(x_value, gev(x_value, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
 
+    # Curve Fitting ln Norm
+	print(f"Calculating fitting for Log Normal {nw_boxsize}")
+	popt_lnnrm, pcov_lnnrm = curve_fit(lnnorm, x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata)))
+	print(f"Plotting Log Normal {nw_boxsize}")
+	ax.plot(x_value, lnnorm(x_value, *popt_lnnrm), 'r--', label='GEV (Fit): \nnu =%5.3f, \nsig =%5.3f' % tuple(popt_lnnrm))
+	
 	# xvalue = np.arange(-1,4,0.1 )
 	# ax.plot(xvalue, genextreme.pdf(xvalue,-0.5,0,0.4), label='scipy genextreme')
 	# ax.plot(xvalue, gev(xvalue, 0.5,0,0.4), label='gev')
