@@ -88,25 +88,51 @@ def cic_halos(data, params, redshift, nw_boxsize, totalbins):
     return boxdata
 
 
-def cic_particles(data, params, redshift, nw_boxsize, totalbins):
-    cutside = int(params.boxsize/nw_boxsize)
-    totalboxes = int(cutside**3) 
+def cic_particles(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = True):
+    match cic_method:
+        case "manual":
+            print("Calculating CIC Using Maunal Method")
+            cutside = int(params.boxsize/nw_boxsize)
+            totalboxes = int(cutside**3) 
+            x = data[:,0:3]/nw_boxsize
+            print("converting to integer")
+            x = x.astype(int)
 
-    data += params.boxsize / 2
-    x = data[:,0:3]/nw_boxsize
-    del data
-    print("converting to end")
-    x = x.astype(int)
-    
-    boxes = []
-    print("caclulating boxes")
-    for i in range (len(x)):
-        boxes.append(x[i][0] + cutside*x[i][1] + cutside**2*x[i][2])
+            boxes = []
+            print("caclulating boxes for particles")
+            
+            for i in range (len(x)):
+                
+                # Here some of the boxes maybe at the edge and hence are nudged to the adjacent boxes
+                for j in range(3):
+                    if x[i][j]>= params.boxsize/nw_boxsize:
+                        x[i][j] -= 1
+                
+                # This line calculates to which the boxes belongs to
+                boxes.append(x[i][0] + cutside*x[i][1] + cutside**2*x[i][2])
 
-    #Box halo numbers
-    
-    boxdata = np.zeros(totalboxes)
-    for i in boxes:
-        boxdata[i] += 1
-        
+            #Number of particles in each boxes
+            boxdata = np.zeros(totalboxes)
+            for i in boxes:
+                boxdata[i] += 1
+
+        case "binned_stat":  
+                size = params.boxsize
+                x_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
+                y_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
+                z_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
+                boxdata = binned_statistic_dd([np.array(data[:,0]),np.array(data[:,1]),np.array(data[:,2])]
+                    ,values = None, statistic = 'count', 
+                    bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
+
+                boxdata = boxdata.ravel
+
+    if density_contrast:
+        size = params.boxsize
+        # size = 200
+        cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (size**3)
+        celldensity = (boxdata - cell_avg)/cell_avg
+        oldboxdata = boxdata
+        boxdata = celldensity
+
     return boxdata
