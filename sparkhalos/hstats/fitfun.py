@@ -33,8 +33,8 @@ def gev_mod(x, nu_g, sig_g, xi):
               - t )
 
 def gev(x, nu_g, sig_g, xi):
-    t = (1 + (xi *(np.log(x+1) - nu_g)/sig_g) )
-    return ( t ** (1 + xi) * np.exp(-t) ) / sig_g
+    t = (1 + (xi *(x - nu_g)/sig_g) ) ** (-1/xi)
+    return (( t ** (1 + xi) * np.exp(-t) ) / sig_g) 
 
 
 # Poisson --------------------------------------------------------------------------------------------------
