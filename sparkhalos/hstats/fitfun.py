@@ -36,6 +36,7 @@ def gev_mod(x, nu_g, sig_g, xi):
 
 def gev(x, xi, nu_g, sig_g):
     t = (1 + (xi *(x - nu_g)/sig_g)) ** (-1/xi)
+    print(xi)
     return (( t ** (1 + xi) * np.exp(-t) ) / sig_g) 
 
 # Log Normal ---------------------------------------------------------------------------------------------
