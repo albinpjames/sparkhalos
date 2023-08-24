@@ -23,9 +23,9 @@ import numpy as np
 
 
 # The location of where the data is stored.
-# datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
-# datalocation = "/home/darkmatter/Documents/Albin/DATA"
-datalocation = "/home/albinpjames/Documents/CUSAT/DATA/3cic2000"
+datalocation = "/mnt/dark/Projects/3.CUSAT/Data/3cic2000"
+# datalocation = "/home/darkmatter/Documents/Albin/DATA/3cic2000"
+# datalocation = "/home/albinpjames/Documents/CUSAT/DATA/3cic2000"
 
 params = SimuParams.init(datalocation, simulation.simparams)
 
@@ -63,8 +63,9 @@ plt.suptitle("CIC From Field Particles", fontsize=15, y=0.95)
 #                          )
 
 for p, nw_boxsize in enumerate(nw_boxsizes): 
-	print(f"Calculating for boxsize {nw_boxsize}")
+	
 	particles_in_box = np.load(datalocation + "/" + str(nw_boxsize) +".npy")
+	print(f"Calculating for boxsize {nw_boxsize} with particles: {np.sum(particles_in_box)}")
 
 	
 	'Here we are converting the particles in box to density contrast '
@@ -98,12 +99,14 @@ for p, nw_boxsize in enumerate(nw_boxsizes):
 		# Curve Fitting GEV
 	print(f"Calculating fitting for GEV {nw_boxsize}")
 	popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, 
-		p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata))
+		# p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata)),
+		p0 =(skew(boxdata),np.std(boxdata)),
 		)
 	print(f"Plotting GEV {nw_boxsize}")
 	# xvalue = np.arange(-1,1,0.1 )
 	xvalue = x_value
-	ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
+	# ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
+	ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g= 0, \nsig_g=%5.3f' % tuple(popt_gev))
 
 	# # Curve Fitting GEV SciP
 	# print(f"Calculating fitting for Genextreme {nw_boxsize}")
@@ -115,10 +118,10 @@ for p, nw_boxsize in enumerate(nw_boxsizes):
 
 
     # Curve Fitting ln Norm
-	print(f"Calculating fitting for Log Normal {nw_boxsize}")
-	popt_lnnrm, pcov_lnnrm = curve_fit(lnnorm, x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata)))
-	print(f"Plotting Log Normal {nw_boxsize}")
-	ax.plot(x_value, lnnorm(x_value, *popt_lnnrm), 'r--', label='Lognorm (Fit): \nnu =%5.3f, \nsig =%5.3f' % tuple(popt_lnnrm))
+	# print(f"Calculating fitting for Log Normal {nw_boxsize}")
+	# popt_lnnrm, pcov_lnnrm = curve_fit(lnnorm, x_value, y_value, p0 =(np.mean(boxdata),np.std(boxdata)))
+	# print(f"Plotting Log Normal {nw_boxsize}")
+	# ax.plot(x_value, lnnorm(x_value, *popt_lnnrm), 'r--', label='Lognorm (Fit): \nnu =%5.3f, \nsig =%5.3f' % tuple(popt_lnnrm))
 	
 	# xvalue = np.arange(-1,4,0.1 )
 	# ax.plot(xvalue, genextreme.pdf(xvalue,-0.5,0,0.4), label='scipy genextreme')
@@ -130,8 +133,8 @@ for p, nw_boxsize in enumerate(nw_boxsizes):
 	# ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
 
 	# Curve Fitting Normal Dist
-	popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
-	ax.plot(x_value, normfun(x_value, *popt_norm), 'b--', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
+	# popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
+	# ax.plot(x_value, normfun(x_value, *popt_norm), 'b--', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
 
 	ax.legend(loc="upper right", fontsize=4)
 
