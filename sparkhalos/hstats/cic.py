@@ -117,15 +117,16 @@ def cic_particles(data, params, nw_boxsize, cic_method ="binned_stat", density_c
                 boxdata[i] += 1
 
         case "binned_stat":  
+                from scipy.stats import binned_statistic_dd 
                 size = params.boxsize
                 x_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 y_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 z_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
-                boxdata = binned_statistic_dd([np.array(data[:,0]),np.array(data[:,1]),np.array(data[:,2])]
+                boxdata = binned_statistic_dd(np.array(data)
                     ,values = None, statistic = 'count', 
                     bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
 
-                boxdata = boxdata.ravel
+                boxdata = boxdata.ravel()
 
     if density_contrast:
         size = params.boxsize

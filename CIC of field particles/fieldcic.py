@@ -1,11 +1,8 @@
 """This program is used to calculate the cic of particles
 """
 
-# Choose the simulation to be used
-# from sparkhalos.simulprocess import test_rand as simulation
-from sparkhalos.simulprocess import abacussummit as simulation
 
-from sparkhalos.simulprocess.simparams import SimuParams
+
 from sparkhalos.hstats.cic import cic_particles
 from sparkhalos.hstats.fitfun import pois, normfun, gev, gev_mod
 
@@ -39,19 +36,15 @@ def dataplot(data):
     plt.show()
 
 # The location of where the data is stored.
+import os 
+
 # datalocation = "/mnt/dark/Projects/3.CUSAT/Data"
 datalocation = "/home/darkmatter/Documents/Albin/DATA"
 
 # Intilaises the simulation parameters for the simulation
-params = SimuParams.init(datalocation, simulation.simparams)
+params = SimuParams.init(datalocation, simparams)
 
-# Redshifts to be computed 
-# redshifts = ["3.000","2.500","2.000"]
-redshifts = ["3.000"]
 
-# The new box size & Bins for computing count in cells distribution
-# nw_boxsizes = [25]
-nw_boxsizes = [10,20,25,50]
 cicbins = 20
 
 # Choose the method for calculating the cic

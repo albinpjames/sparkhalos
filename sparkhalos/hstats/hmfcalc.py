@@ -16,7 +16,7 @@ def hmfcalc(redshift):
     return hmf
 
 
-def dndlnm(params, redshift: float, totalbins: int):
+def dndlnm(data, params, redshift: float, totalbins: int):
     """Computes the hmf from the halos as per the given parameters,
     raw simulation data has to be processed before computing this.
     """
