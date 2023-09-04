@@ -6,10 +6,10 @@ sys.path.append('..')
 
 from sparkhalos.simparams.simparams import SimuParams
 """ Choose the simulation to be used """
-from sparkhalos.simulations import test_rand as simulation
-from sparkhalos.simparams.test_rand import test500 as simparams
-# from sparkhalos.simulations import abacussummit as simulation
-# from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
+# from sparkhalos.simulations import test_rand as simulation
+# from sparkhalos.simparams.test_rand import test500 as simparams
+from sparkhalos.simulations import abacussummit as simulation
+from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 
 from sparkhalos.hstats.cic import cic, dens_contrast
 import numpy as np
@@ -95,10 +95,10 @@ if __name__ == "__main__":
 
             case "abacussummit":
                 """Read halo data"""
-                halodata = mass_pos(params, redshift, mode="all")
+                halodata = simulation.mass_pos(params, redshift, mode="all")
 
                 """Read particle data"""
-                partdata = read_particles(params, redshift, [["field","halo"], ["A"]])
+                partdata = simulation.read_particles(params, redshift, [["field","halo"], ["A"]])
                 print(f"No of particles {len(partdata)}.")
                 partpos = part_pos_cnvrt(partdata, particles_taken, take_all)
 
