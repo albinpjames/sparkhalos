@@ -94,7 +94,7 @@ def mass_pos(params, redshift, mode="all"):
     """
 
     print("Reading halo mass position data.")
-    pathset = os.path.join(
+    pathsave = os.path.join(
         params.datadirec,
         "ProcessedData",
         "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
@@ -104,15 +104,15 @@ def mass_pos(params, redshift, mode="all"):
     )
 
     print("Checking if already processed data exists.")
-    if os.path.exists(pathset, params.filename_notime + "_" + redshift + ".dat"):
+    if os.path.exists(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat")):
         print("Reading processed data.")
-        return ascii.read(os.path.join(pathset, params.filename_notime + "_" + redshift + ".dat"))
+        return ascii.read(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"))
 
     else:
         # check the directory does not exist
-        if not (os.path.exists(pathset)):
+        if not (os.path.exists(pathsave)):
             print("Creating directory to store data.")
-            os.makedirs(pathset)
+            os.makedirs(pathsave)
 
         # Extarct mass and position
         print("Status: Extracting the mass and position of the particles")
@@ -140,41 +140,83 @@ def mass_pos(params, redshift, mode="all"):
         del data["SO_central_particle"]
 
         print("Writing the processed data to the file")
-        ascii.write(data, os.path.join(pathset, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
+        ascii.write(data, os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
         return data
 
-def readfieldrv(params, redshift, type="field", subset="A"):
+def _readrv(params, redshift, type="field", subset="A"):
     """This function reads the field data from abacus summit simulation
+    type : field or halo
+    subset : A or B
     """
-    print("Reading the data")
 
-    # Location of the data
-    path = os.path.join(
+    pathsave = os.path.join(
         params.datadirec,
-        "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
-        + params.type
-        + "_"
-        + params.cosmo
-        + "_"
-        + params.intcont,
-        "halos/z" + redshift,
-        type + "_rv_" + subset
-    )
+        "ProcessedData",
+        "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
+        "halos",
+        "z" + redshift,
+        type + "_rv" + subset
+        )
 
-    files = Path(path).glob('*.asdf')
-    for i, file in enumerate(files):
+    print("Checking if already processed data exists.")
+    if os.path.exists(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat")):
+        print("Reading processed data.")
+        return ascii.read(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"))
+
+
+    else:
+        # check the directory does not exist
+        if not (os.path.exists(pathsave)):
+            print("Creating directory to store data.")
+            os.makedirs(pathsave)
+
+        # Location of the data
+        path = os.path.join(
+            params.datadirec,
+            "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+            + params.type
+            + "_"
+            + params.cosmo
+            + "_"
+            + params.intcont,
+            "halos/z" + redshift,
+            type + "_rv_" + subset
+        )
+
+        files = Path(path).glob('*.asdf')
+        for i, file in enumerate(files):
+            if i == 0:
+                cat = read_asdf(file, cleaned=False)
+            else:
+                print(f"reading {i} file")
+                cat_read = read_asdf(file, cleaned=False) # Reads the data
+                cat =  vstack([cat, cat_read])
+                del cat_read
+
+        cat.add_columns(
+            [
+                cat["pos"][:, 0],
+                cat["pos"][:, 1],
+                cat["pos"][:, 2],
+            ],
+            names=["xpos", "ypos", "zpos"],
+        )
+        del cat["pos"]
+
+        print("Writing the processed data to the file")
+        ascii.write(cat, os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
+        return cat
+
+def read_particles(params, redshift, toread):
+    import itertools
+    for i, pardata in enumerate(itertools.product(*toread)):
         if i == 0:
-            cat = read_asdf(file, cleaned=False)
+            partcl = _readrv(params, redshift,*pardata)
         else:
-            print(f"reading {i} file")
-            cat_read = read_asdf(file, cleaned=False) # Reads the data
-            cat =  vstack([cat, cat_read])
-            del cat_read
-    # data = cat.halos[clms]  # Reads the given column and saves it to an array
-    # del cat  # Deleting complete loaded data to save memory
+            partcl_read = _readrv(params, redshift,*pardata)
+            partcl = vstack([partcl, partcl_read])
+        print("reading data complete")
 
-    # return data  # Returning the requested colums
-    return cat
-
+    return partcl
 
 

@@ -26,7 +26,7 @@ def dataplot(data):
     """
     from mpl_toolkits import mplot3d
     # Creating figure
-    fig = plt.figure(figsize = (10, 7))
+    fig = plt.figure(data3dplot, figsize = (10, 7))
     ax = plt.axes(projection ="3d")
      
 

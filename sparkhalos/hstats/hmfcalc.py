@@ -20,22 +20,6 @@ def dndlnm(data, params, redshift: float, totalbins: int):
     """Computes the hmf from the halos as per the given parameters,
     raw simulation data has to be processed before computing this.
     """
-    pathset = os.path.join(
-        params.datadirec,
-        "ProcessedData",
-        "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
-        "halos/z" + redshift,
-    )
-
-    # check the directory does not exist
-    if not (os.path.exists(pathset)):
-        print("Processed file does not exist")
-
-    print("Reading file")
-
-    # Reads the data to be used for caluclating hmf
-    data = ascii.read(os.path.join(pathset, params.filename_notime + "_" + redshift + ".dat"))
-
     # Calulates the bin edges
     print("Calculating bin edges")
     binedge = np.logspace(

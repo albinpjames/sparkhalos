@@ -14,7 +14,8 @@ totalbins = 50
 
 for redshift in redshifts:
     hmf = hmfcalc(redshift)
-    halomf, bin_centers = dndlnm(params, redshift, totalbins)
+    data = mass_pos(params, redshift, mode="all")
+    halomf, bin_centers = dndlnm(data, params, redshift, totalbins)
 
 # Ploting HMF
 import matplotlib.pyplot as plt

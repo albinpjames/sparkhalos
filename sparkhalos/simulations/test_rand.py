@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 
 def generate_mxyz(params, numbPoints):    
@@ -10,6 +11,7 @@ def generate_mxyz(params, numbPoints):
     mass = 10**(np.random.uniform(10, 15, size=(numbPoints)))
     print(mass)
     data = np.column_stack((mass,xx,yy,zz))
+    data = pd.DataFrame(data, columns = ['N','xpos','ypos','zpos'])
 
     return data
 

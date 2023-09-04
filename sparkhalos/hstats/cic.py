@@ -88,7 +88,8 @@ def cic_halos(data, params, redshift, nw_boxsize, totalbins):
     return boxdata
 
 
-def cic_particles(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = True):
+
+def cic(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = False):
     match cic_method:
         case "manual":
             print("Calculating CIC Using Maunal Method")
@@ -129,11 +130,12 @@ def cic_particles(data, params, nw_boxsize, cic_method ="binned_stat", density_c
                 boxdata = boxdata.ravel()
 
     if density_contrast:
-        size = params.boxsize
-        # size = 200
-        cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (size**3)
-        celldensity = (boxdata - cell_avg)/cell_avg
-        oldboxdata = boxdata
-        boxdata = celldensity
+        boxdata = dens_contrast(boxdata,params)
 
     return boxdata
+
+def dens_contrast(boxdata,params,nw_boxsize):
+    size = params.boxsize
+    cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (size**3)
+    celldensity = (boxdata - cell_avg)/cell_avg
+    return celldensity
