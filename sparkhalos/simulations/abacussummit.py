@@ -143,7 +143,7 @@ def mass_pos(params, redshift, mode="all"):
         ascii.write(data, os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
         return data
 
-def _readrv(params, redshift, type="field", subset="A"):
+def _readrv_save(params, redshift, type="field", subset="A"):
     """This function reads the field data from abacus summit simulation
     type : field or halo
     subset : A or B
@@ -202,10 +202,56 @@ def _readrv(params, redshift, type="field", subset="A"):
             names=["xpos", "ypos", "zpos"],
         )
         del cat["pos"]
+        del cat["vel"]
 
+        print(cat)
         print("Writing the processed data to the file")
         ascii.write(cat, os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
         return cat
+
+def _readrv(params, redshift, type="field", subset="A"):
+    """This function reads the field data from abacus summit simulation
+    type : field or halo
+    subset : A or B
+    """
+
+    # Location of the data
+    path = os.path.join(
+        params.datadirec,
+        "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+        + params.type
+        + "_"
+        + params.cosmo
+        + "_"
+        + params.intcont,
+        "halos/z" + redshift,
+        type + "_rv_" + subset
+    )
+
+    files = Path(path).glob('*.asdf')
+    for i, file in enumerate(files):
+        if i == 0:
+            cat = read_asdf(file, cleaned=False)
+        else:
+            print(f"reading {i} file")
+            cat_read = read_asdf(file, cleaned=False) # Reads the data
+            cat =  vstack([cat, cat_read])
+            del cat_read
+
+    cat.add_columns(
+        [
+            cat["pos"][:, 0],
+            cat["pos"][:, 1],
+            cat["pos"][:, 2],
+        ],
+        names=["xpos", "ypos", "zpos"],
+    )
+    del cat["pos"]
+    del cat["vel"]
+
+    print(cat)
+    print("Writing the processed data to the file")
+    return cat
 
 def read_particles(params, redshift, toread):
     import itertools
