@@ -32,18 +32,32 @@ hugebase2000 = {
     "cosmo": "c000",  # The cosmology used in the simulation
     "intcont": "ph000",  # The initial condition used for the simulation
     "boxsize": 2000,  # The box size of the simulation
-    "fno_s": 0,  # If data fragamneted to multiple files, starting file number
-    "fno_e": 33,  # If data fragamneted to multiple files, ending file number
+    "mass": 5.694520105223270 * 10**10,  # The mass of the particles in the simulation
+}
+
+base2000 = {
+    "name": "abacussummit",  # The name of the simulation
+    "type": "base",  # The type of simulation (base, small for abacussumit)
+    "cosmo": "c000",  # The cosmology used in the simulation
+    "intcont": "ph000",  # The initial condition used for the simulation
+    "boxsize": 2000,  # The box size of the simulation
     "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
 }
 
-hugebase500 = {
+huge7500 = {
     "name": "abacussummit",  # The name of the simulation
-    "type": "hugebase",  # The type of simulation (base, small for abacussumit)
+    "type": "huge",  # The type of simulation (base, small for abacussumit)
     "cosmo": "c000",  # The cosmology used in the simulation
-    "intcont": "ph000",  # The initial condition used for the simulation
+    "intcont": "ph201",  # The initial condition used for the simulation
+    "boxsize": 7500,  # The box size of the simulation
+    "mass": 5.694520105223272 * 10**10,  # The mass of the particles in the simulation
+}
+
+small500 = {
+    "name": "abacussummit",  # The name of the simulation
+    "type": "small",  # The type of simulation (base, small for abacussumit)
+    "cosmo": "c000",  # The cosmology used in the simulation
+    "intcont": "ph3000",  # The initial condition used for the simulation
     "boxsize": 500,  # The box size of the simulation
-    "fno_s": 0,  # If data fragamneted to multiple files, starting file number
-    "fno_e": 33,  # If data fragamneted to multiple files, ending file number
     "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
 }
