@@ -27,8 +27,8 @@ class SimuParams:
     cosmo: str  # The cosmology used in the simulation
     intcont: str  # The initial condition used for the simulation
     boxsize: int  # The box size of the simulation
-    fno_s: int  # If data fragamneted to multiple files, starting file number
-    fno_e: int  # If data fragamneted to multiple files, ending file number
+    # fno_s: int  # If data fragamneted to multiple files, starting file number
+    # fno_e: int  # If data fragamneted to multiple files, ending file number
     mass: float  # The mass of the particles in the simulation
 
     volume: int # The total volume of the simulation
@@ -57,8 +57,8 @@ class SimuParams:
             cosmo = cosmo if cosmo is not None else data["cosmo"],
             intcont = intcont if intcont is not None else data["intcont"],
             boxsize = boxsize if boxsize is not None else data["boxsize"],
-            fno_s = fno_s if fno_s is not None else data["fno_s"],
-            fno_e = fno_e if fno_e is not None else data["fno_e"],
+            # fno_s = fno_s if fno_s is not None else data["fno_s"],
+            # fno_e = fno_e if fno_e is not None else data["fno_e"],
             mass = mass if mass is not None else data["mass"],
             
             volume = boxsize**3 if boxsize is not None else data["boxsize"]**3,

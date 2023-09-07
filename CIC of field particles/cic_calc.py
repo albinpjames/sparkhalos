@@ -70,10 +70,10 @@ if __name__ == "__main__":
     params = SimuParams.init(datalocation, simparams)
 
     """ Redshifts & boxsizes to be computed """
-    # redshifts = ["3.000","2.500","2.000"]
-    redshifts = ["2.500"]
+    redshifts = ["3.000","2.500","2.000"]
+    # redshifts = ["3.000"]
     # nw_boxsizes = [30]
-    nw_boxsizes = [50,40,30,20,15,10,5,3,1]
+    nw_boxsizes = [50,40,30,20,15,10,5,3,2,1]
 
 
     # cic_method = "manual"
@@ -97,6 +97,8 @@ if __name__ == "__main__":
                 """Read halo data"""
                 print(f"Halo data is being read for redshift:{redshift}")
                 halodata = simulation.mass_pos(params, redshift, mode="all")
+                halopartno = halodata["N"]
+                halodata["N"] = halodata["N"] * params.mass
 
                 """Read particle data"""
                 print(f"Particle data is being read for redshift:{redshift}")
@@ -145,3 +147,18 @@ if __name__ == "__main__":
 
             np.save(os.path.join(pathsave,str(nw_boxsize)),cicdata)
             np.save(os.path.join(pathsave,str(nw_boxsize)+"_mass"),binedge)
+
+        totalhalos = len(halodata)
+        totalpart = len(partdata)
+        smhalomass = np.min(halodata["N"])  
+        smhalono = np.min(halopartno)     
+        lrhalomass = np.max(halodata["N"])
+        lrhalono = np.max(halopartno)
+        with open(os.path.join(pathsave,"mass_data.txt"),"w") as file:
+            file.write(f"Number of halos = {totalhalos}" + "\n" 
+                    f"Number of particles = {totalpart}" + "\n" 
+                    f"Smallest Mass of Halo = {smhalomass:.18E}" + "\n" 
+                    f"No: of particles in smallest halo = {smhalono}" + "\n"
+                    f"Largest Mass of halo = {lrhalomass:.18E}" + "\n"
+                    f"No: of particles in largest halo =  {lrhalono}" + "\n"
+                    f"Mass of a particle = {params.mass:.18E}" ) 
