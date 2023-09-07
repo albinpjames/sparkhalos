@@ -120,9 +120,11 @@ def cic(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = 
         case "binned_stat":  
                 from scipy.stats import binned_statistic_dd 
                 size = params.boxsize
-                x_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
-                y_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
-                z_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
+                cutside = int(params.boxsize/nw_boxsize)
+
+                x_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
+                y_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
+                z_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
                 boxdata = binned_statistic_dd(data
                     ,values = None, statistic = 'count', 
                     bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic

@@ -71,9 +71,9 @@ if __name__ == "__main__":
 
     """ Redshifts & boxsizes to be computed """
     # redshifts = ["3.000","2.500","2.000"]
-    redshifts = ["3.000"]
-    # nw_boxsizes = [25]
-    nw_boxsizes = [10,25,50]
+    redshifts = ["2.500"]
+    # nw_boxsizes = [30]
+    nw_boxsizes = [50,40,30,20,15,10,5,3,1]
 
 
     # cic_method = "manual"
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     take_all = True
 
     for redshift in redshifts:
-
+        print(f"redshift being computed: {redshift}")
         """ Here the data is read to be processed """
         match params.name:
             case "test_randomnum":
@@ -95,12 +95,16 @@ if __name__ == "__main__":
 
             case "abacussummit":
                 """Read halo data"""
+                print(f"Halo data is being read for redshift:{redshift}")
                 halodata = simulation.mass_pos(params, redshift, mode="all")
 
                 """Read particle data"""
+                print(f"Particle data is being read for redshift:{redshift}")
                 partdata = simulation.read_particles(params, redshift, [["field","halo"], ["A"]])
-                print(f"No of particles {len(partdata)}.")
+                print(f"No of particles in redshift- {redshift}: {len(partdata)}.")
                 partpos = part_pos_cnvrt(partdata, particles_taken, take_all)
+
+                assert len(partdata) == len(partpos), "The length of particle arrays are different."
 
         pathsave = os.path.join(
             params.datadirec,
@@ -116,8 +120,11 @@ if __name__ == "__main__":
 
         for nw_boxsize in nw_boxsizes: 
 
+            print(f"Boxsize being computed: {nw_boxsize}")
             cutside = int(params.boxsize/nw_boxsize)
+            print(f"The times the box length is cut: {cutside}")
             totalboxes = int(cutside**3) 
+            print(f"The total number of boxes: {totalboxes}")
 
             cicdata = np.zeros((totalboxes,halobins+2))
 
