@@ -123,7 +123,7 @@ def cic(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = 
                 x_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 y_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
                 z_bins_dd = np.arange(0,size + nw_boxsize, nw_boxsize) 
-                boxdata = binned_statistic_dd(np.array([data['xpos'], data['ypos'], data['zpos']]).T
+                boxdata = binned_statistic_dd(data
                     ,values = None, statistic = 'count', 
                     bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
 

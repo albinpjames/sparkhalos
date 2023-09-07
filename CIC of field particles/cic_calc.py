@@ -130,10 +130,11 @@ if __name__ == "__main__":
 
             for i in range(halobins):
                 data = halodata[["xpos","ypos","zpos"]][(binedge[i] <= halodata["N"]) & (halodata["N"] < binedge[i + 1])]
-                print(data)
-                cicdata[:,i] = cic(np.array(data), params, nw_boxsize)
+                data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
+                cicdata[:,i] = cic(data, params, nw_boxsize)
 
             cicdata[:,halobins] = cic(partpos, params, nw_boxsize)
             cicdata[:,halobins+1] = dens_contrast(cicdata[:,halobins], params, nw_boxsize)
 
             np.save(os.path.join(pathsave,str(nw_boxsize)),cicdata)
+            np.save(os.path.join(pathsave,str(nw_boxsize)+"_mass"),binedge)
