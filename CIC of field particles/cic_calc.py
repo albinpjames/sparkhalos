@@ -6,10 +6,10 @@ sys.path.append('..')
 
 from sparkhalos.simparams.simparams import SimuParams
 """ Choose the simulation to be used """
-# from sparkhalos.simulations import test_rand as simulation
-# from sparkhalos.simparams.test_rand import test500 as simparams
-from sparkhalos.simulations import abacussummit as simulation
-from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
+from sparkhalos.simulations import test_rand as simulation
+from sparkhalos.simparams.test_rand import test500 as simparams
+# from sparkhalos.simulations import abacussummit as simulation
+# from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 
 from sparkhalos.hstats.cic import cic, dens_contrast
 import numpy as np
@@ -21,6 +21,15 @@ def getlocation():
     from pathlib import Path
     path = Path(path).parents[1]
     return os.path.join(path, "DATA")
+
+def saveloaction(params,redshift):
+    return os.path.join(
+            params.datadirec,
+            "ProcessedData",
+            "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
+            "halos",
+            "z" + redshift,
+            "cic")
 
 def mass_pos_cnvrt(halodata):
     halodata = np.lib.recfunctions.structured_to_unstructured(np.array(halodata))
@@ -108,13 +117,7 @@ if __name__ == "__main__":
 
                 assert len(partdata) == len(partpos), "The length of particle arrays are different."
 
-        pathsave = os.path.join(
-            params.datadirec,
-            "ProcessedData",
-            "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
-            "halos",
-            "z" + redshift,
-            "cic")
+        pathsave = saveloaction(params,redshift)
 
         if not (os.path.exists(pathsave)):
             print("Creating directory to store data.")
