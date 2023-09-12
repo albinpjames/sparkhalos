@@ -1,12 +1,16 @@
 """This program is used to calculate the cic of particles
 """
 
-# Choose the simulation to be used
-# from sparkhalos.simulprocess import test_rand as simulation
-from sparkhalos.simulprocess import abacussummit as simulation
+from sparkhalos.simparams.simparams import SimuParams
+""" Choose the simulation to be used """
+from sparkhalos.simulations import test_rand as simulation
+from sparkhalos.simparams.test_rand import test500 as simparams
+# from sparkhalos.simulations import abacussummit as simulation
+# from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 
-from sparkhalos.simulprocess.simparams import SimuParams
-from sparkhalos.hstats.cic import cic_particles
+from localfiles import getlocation, saveloaction
+
+
 from sparkhalos.hstats.fitfun import pois, normfun, gev, lnnorm
 
 from scipy.stats import binned_statistic_dd 
@@ -22,34 +26,20 @@ from scipy.optimize import curve_fit
 import numpy as np
 import pandas as pd
 
-
-def getlocation():
-    path = os.getcwd()
-    from pathlib import Path
-    path = Path(path).parents[1]
-    return os.path.join(path, "DATA")
-
-def saveloaction(params,redshift):
-    return os.path.join(
-            params.datadirec,
-            "ProcessedData",
-            "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
-            "halos",
-            "z" + redshift,
-            "cic")
-
 if __name__ == "__main__":
 
-    """ Intilaises the simulation parameters for the simulation """
-    datalocation = getlocation()
-    params = SimuParams.init(datalocation, simparams)
-    datalocation = saveloaction(params,redshift)
+	redshift = "3.000"
+
+	""" Intilaises the simulation parameters for the simulation """
+	datalocation = getlocation()
+	params = SimuParams.init(datalocation, simparams)
+	datalocation = saveloaction(params,redshift)
 
 
 	nw_boxsizes = [5,10,20,50]
 	cicbins = 20
-	size = 2000
-	redshift = 3
+	size = params.boxsize
+	
 
 	ncols = 2
 	nrows = len(nw_boxsizes) // ncols + 1
@@ -85,11 +75,12 @@ if __name__ == "__main__":
 		massdata = np.load(datalocation + "/" + str(nw_boxsize) + "_mass" +".npy")
 
 		colm = ["M{}".format(i) for i in range(1,21)]
-		colm = colm.append("P")
-		colm = colm.append("D")
+		colm.append("P")
+		colm.append("D")
 		boxdata = pd.DataFrame(cicdata, columns = colm)
 
-		print(f"Calculating for boxsize {nw_boxsize} with particles: {np.sum(particles_in_box)}")
+		pardata = sum(boxdata["P"])
+		print(f"Calculating for boxsize {nw_boxsize} with particles: {pardata}")
 
 		
 		'Plotting the data'
@@ -98,7 +89,9 @@ if __name__ == "__main__":
 		# ax.set_xscale('log')
 
 		'The data is binned and x and y values are obtained'
-		hist_y, hist_edge = np.histogram(boxdata, bins=cicbins)
+		cicbins = np.linspace(min(boxdata["P"])-0.5, max(boxdata["P"])-0.5, 50)
+		cbins = 30
+		hist_y, hist_edge = np.histogram(boxdata["P"], bins=cicbins)
 
 		normfactor = ((hist_edge[1]-hist_edge[0])*np.sum(hist_y))
 		y_value = hist_y / normfactor
@@ -114,17 +107,17 @@ if __name__ == "__main__":
 		errorbar = np.sqrt(hist_y) / normfactor
 		ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
 
-			# Curve Fitting GEV
-		print(f"Calculating fitting for GEV {nw_boxsize}")
-		popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, 
-			# p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata)),
-			p0 =(skew(boxdata),np.std(boxdata)),
-			)
-		print(f"Plotting GEV {nw_boxsize}")
-		# xvalue = np.arange(-1,1,0.1 )
-		xvalue = x_value
-		# ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
-		ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g= 0, \nsig_g=%5.3f' % tuple(popt_gev))
+		# 	# Curve Fitting GEV
+		# print(f"Calculating fitting for GEV {nw_boxsize}")
+		# popt_gev, pcov_gev = curve_fit(gev, x_value, y_value, 
+		# 	# p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata)),
+		# 	p0 =(skew(boxdata),np.std(boxdata)),
+		# 	)
+		# print(f"Plotting GEV {nw_boxsize}")
+		# # xvalue = np.arange(-1,1,0.1 )
+		# xvalue = x_value
+		# # ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
+		# ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g= 0, \nsig_g=%5.3f' % tuple(popt_gev))
 
 		# # Curve Fitting GEV SciP
 		# print(f"Calculating fitting for Genextreme {nw_boxsize}")
@@ -146,7 +139,7 @@ if __name__ == "__main__":
 		# ax.plot(xvalue, gev(xvalue, 0.5,0,0.4), label='gev')
 
 
-		# Curve Fitting Poisson
+		# # Curve Fitting Poisson
 		# popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
 		# ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
 
@@ -154,6 +147,6 @@ if __name__ == "__main__":
 		# popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
 		# ax.plot(x_value, normfun(x_value, *popt_norm), 'b--', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
 
-		ax.legend(loc="upper right", fontsize=4)
+		# ax.legend(loc="upper right", fontsize=4)
 
 	plt.show()

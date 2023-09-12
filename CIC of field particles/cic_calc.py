@@ -12,24 +12,10 @@ from sparkhalos.simparams.test_rand import test500 as simparams
 # from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 
 from sparkhalos.hstats.cic import cic, dens_contrast
+from localfiles import getlocation, saveloaction
 import numpy as np
 import math
 import os
-
-def getlocation():
-    path = os.getcwd()
-    from pathlib import Path
-    path = Path(path).parents[1]
-    return os.path.join(path, "DATA")
-
-def saveloaction(params,redshift):
-    return os.path.join(
-            params.datadirec,
-            "ProcessedData",
-            "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
-            "halos",
-            "z" + redshift,
-            "cic")
 
 def mass_pos_cnvrt(halodata):
     halodata = np.lib.recfunctions.structured_to_unstructured(np.array(halodata))
@@ -82,7 +68,7 @@ if __name__ == "__main__":
     redshifts = ["3.000","2.500","2.000"]
     # redshifts = ["3.000"]
     # nw_boxsizes = [30]
-    nw_boxsizes = [50,40,30,20,15,10,5,3,2,1]
+    nw_boxsizes = [50,40,30,20,15,10,5]
 
 
     # cic_method = "manual"
@@ -99,6 +85,8 @@ if __name__ == "__main__":
         match params.name:
             case "test_randomnum":
                 halodata = simulation.generate_mxyz(params,particles_taken)
+                halopartno = halodata["N"]
+                halodata["N"] = halodata["N"] * params.mass
                 partpos = simulation.generate_xyz(params,particles_taken)
                 print("The data is simulated for test_rand")
 
@@ -152,7 +140,7 @@ if __name__ == "__main__":
             np.save(os.path.join(pathsave,str(nw_boxsize)+"_mass"),binedge)
 
         totalhalos = len(halodata)
-        totalpart = len(partdata)
+        totalpart = len(partpos)
         smhalomass = np.min(halodata["N"])  
         smhalono = np.min(halopartno)     
         lrhalomass = np.max(halodata["N"])
