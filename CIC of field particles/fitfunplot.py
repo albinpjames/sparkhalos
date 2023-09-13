@@ -39,7 +39,7 @@ if __name__ == "__main__":
 	datalocation = saveloaction(params,redshift)
 
 
-	nw_boxsizes = [5,10,20,50]
+	nw_boxsizes = [5,10,15,50]
 	cicbins = 20
 	size = params.boxsize
 	
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 		'The data is binned and x and y values are obtained'
 		mindata = min(boxdata["P"])
 		maxdata = max(boxdata["P"])
-		step =int((maxdata - mindata)/40)
+		step =int((maxdata - mindata)/50)
 
 		cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
 		cbins = 30
