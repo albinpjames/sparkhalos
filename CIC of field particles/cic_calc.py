@@ -76,7 +76,7 @@ if __name__ == "__main__":
     halobins = 20
      
     """ Number of particles taken or generated """     
-    particles_taken = 10000000
+    particles_taken = 10**8
     take_all = True
 
     for redshift in redshifts:

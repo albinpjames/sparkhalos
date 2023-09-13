@@ -1,6 +1,9 @@
 """This program is used to calculate the cic of particles
 """
 
+import sys
+sys.path.append('..')
+
 from sparkhalos.simparams.simparams import SimuParams
 """ Choose the simulation to be used """
 from sparkhalos.simulations import test_rand as simulation
@@ -53,7 +56,7 @@ if __name__ == "__main__":
 	    top=0.8,
 	    wspace=0.2,
 	    hspace=0.5)
-	plt.suptitle("CIC From Field Particles", fontsize=15, y=0.95)
+	plt.suptitle(f"CIC From Field Particles of {params.name} of size {params.boxsize} MPc/h", fontsize=15, y=0.95)
 
 	# ax = plt.subplot(nrows, ncols, 1)
 	# ax.axis('off')
@@ -80,16 +83,20 @@ if __name__ == "__main__":
 		boxdata = pd.DataFrame(cicdata, columns = colm)
 
 		pardata = sum(boxdata["P"])
-		print(f"Calculating for boxsize {nw_boxsize} with particles: {pardata}")
+		print(f"Calculating for boxsize {nw_boxsize} with particles: {pardata:.1e}")
 
 		
 		'Plotting the data'
 		ax = plt.subplot(nrows, ncols, p+1)
-		ax.set_title(f"CIC Computed for {nw_boxsize} sub box size")
+		ax.set_title(f"Sub box size: {nw_boxsize} - Particles: {pardata:.2e}")
 		# ax.set_xscale('log')
 
 		'The data is binned and x and y values are obtained'
-		cicbins = np.linspace(min(boxdata["P"])-0.5, max(boxdata["P"])-0.5, 50)
+		mindata = min(boxdata["P"])
+		maxdata = max(boxdata["P"])
+		step =int((maxdata - mindata)/40)
+
+		cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
 		cbins = 30
 		hist_y, hist_edge = np.histogram(boxdata["P"], bins=cicbins)
 
@@ -139,14 +146,14 @@ if __name__ == "__main__":
 		# ax.plot(xvalue, gev(xvalue, 0.5,0,0.4), label='gev')
 
 
-		# # Curve Fitting Poisson
-		# popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata),))
-		# ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
+		# Curve Fitting Poisson
+		popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata["P"]),))
+		ax.plot(x_value, pois(x_value, np.mean(boxdata["P"])), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata["P"])}' )
 
 		# Curve Fitting Normal Dist
 		# popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
 		# ax.plot(x_value, normfun(x_value, *popt_norm), 'b--', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
 
-		# ax.legend(loc="upper right", fontsize=4)
+		ax.legend(loc="upper right", fontsize=4)
 
 	plt.show()
