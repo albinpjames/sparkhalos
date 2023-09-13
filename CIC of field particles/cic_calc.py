@@ -33,7 +33,7 @@ def part_pos_cnvrt(partdata, particles_taken, take_all):
         return partpos
     
     else:    
-        randomlist = random.sample(range(0, len(field)), particles_taken)
+        randomlist = np.random.sample(range(0, len(field)), particles_taken)
         partpos = partdata['xpos','ypos','zpos'][randomlist]
         partpos = np.lib.recfunctions.structured_to_unstructured(np.array(partpos))
         partpos += params.boxsize / 2
@@ -65,10 +65,10 @@ if __name__ == "__main__":
     params = SimuParams.init(datalocation, simparams)
 
     """ Redshifts & boxsizes to be computed """
-    redshifts = ["3.000","2.500","2.000"]
-    # redshifts = ["3.000"]
+    # redshifts = ["3.000","2.500","2.000"]
+    redshifts = ["3.000"]
     # nw_boxsizes = [30]
-    nw_boxsizes = [50,40,30,20,15,10,5]
+    nw_boxsizes = [50,15,10,5]
 
 
     # cic_method = "manual"
