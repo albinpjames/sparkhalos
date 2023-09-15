@@ -34,9 +34,12 @@ def gev_mod(x, nu_g, sig_g, xi):
               + (1 + xi) * np.log(t)
               - t )
 
+# def gev_delta(x, xi, nu_g, sig_g):
+#     t = (1 + (xi *(np.log(x+1) - nu_g)/sig_g)) ** (-1/xi)
+#     return (( t ** (1 + xi) * np.exp(-t) ) / sig_g ) / (x+1)
+
 def gev_delta(x, xi, nu_g, sig_g):
-    t = (1 + (xi *(np.log(x+1) - nu_g)/sig_g)) ** (-1/xi)
-    return (( t ** (1 + xi) * np.exp(-t) ) / sig_g *(x+1)) 
+    return gev_A(np.log(x+1),xi, nu_g, sig_g) / (x+1)
 
 def gev_A(x, xi, nu_g, sig_g):
     t = (1 + (xi *(x - nu_g)/sig_g)) ** (-1/xi)

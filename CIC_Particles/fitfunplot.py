@@ -14,7 +14,7 @@ from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 from localfiles import getlocation, saveloaction
 
 
-from sparkhalos.hstats.fitfun import pois, normfun, gev_delta, lnnorm
+from sparkhalos.hstats.fitfun import pois, normfun, gev_delta, lnnorm, gev_A
 
 from scipy.stats import binned_statistic_dd 
 from scipy.stats import skew
@@ -91,15 +91,22 @@ if __name__ == "__main__":
 		ax.set_title(f"Sub box size: {nw_boxsize} - Particles: {pardata:.2e}")
 		# ax.set_xscale('log')
 
+		# boxdata = np.log(boxdata["D"]+1)
+		boxdata = boxdata["D"]
+		
 		'The data is binned and x and y values are obtained'
-		mindata = min(boxdata["P"])
-		maxdata = max(boxdata["P"])
-		step =int((maxdata - mindata)/50)
+		# mindata = min(boxdata["D"])
+		# maxdata = max(boxdata["D"])
+		# step =int((maxdata - mindata)/50)
+		# cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
+		cicbins = 30
 
-		cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
-		hist_y, hist_edge = np.histogram(boxdata["D"], bins=cicbins)
+		hist_y, hist_edge = np.histogram(boxdata, bins=cicbins)
+		print(hist_edge)
 
 		normfactor = ((hist_edge[1]-hist_edge[0])*np.sum(hist_y))
+
+		print(f"hiat sum {np.sum(hist_y)} - normfactor: {normfactor}")
 		y_value = hist_y / normfactor
 		
 		x_center = (0.5*(hist_edge[1:] + hist_edge[:-1]))
