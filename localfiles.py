@@ -6,7 +6,7 @@ def getlocation():
     path = Path(path).parents[1]
     return os.path.join(path, "DATA")
 
-def saveloaction(params,redshift):
+def savelocation(params,redshift):
     return os.path.join(
             params.datadirec,
             "ProcessedData",

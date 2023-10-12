@@ -11,7 +11,7 @@ from sparkhalos.simparams.simparams import SimuParams
 from sparkhalos.simulations import abacussummit as simulation
 from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 
-from localfiles import getlocation, saveloaction
+from localfiles import getlocation, savelocation
 
 
 from sparkhalos.hstats.fitfun import pois, normfun, gev_delta, lnnorm, gev_A
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 	""" Intilaises the simulation parameters for the simulation """
 	datalocation = getlocation()
 	params = SimuParams.init(datalocation, simparams)
-	datalocation = saveloaction(params,redshift)
+	datalocation = savelocation(params,redshift)
 
 
 	nw_boxsizes = [10,15,30,50]
@@ -47,6 +47,8 @@ if __name__ == "__main__":
 	ncols = 2
 	nrows = len(nw_boxsizes) // ncols + 1
 
+	dmin = -0.1
+	dmax = 0.1
 	# Intalizing the figure
 	print("The figure is intalised")
 	plt.figure(figsize=(8, nrows * 3), dpi=150)
@@ -56,7 +58,7 @@ if __name__ == "__main__":
 	    top=0.8,
 	    wspace=0.2,
 	    hspace=0.5)
-	plt.suptitle(f"CIC From Field Particles of {params.name} of size {params.boxsize} MPc/h", fontsize=15, y=0.95)
+	plt.suptitle(f"Halos CIC of {params.name} of size {params.boxsize} MPc/h in delta rabge {dmin} to {dmax}", fontsize=15, y=0.95)
 
 	# ax = plt.subplot(nrows, ncols, 1)
 	# ax.axis('off')
@@ -78,6 +80,7 @@ if __name__ == "__main__":
 		massdata = np.load(datalocation + "/" + str(nw_boxsize) + "_mass" +".npy")
 
 		colm = ["M{}".format(i) for i in range(1,21)]
+		massbins = ["M{}".format(i) for i in range(1,21)]
 		colm.append("P")
 		colm.append("D")
 		boxdata = pd.DataFrame(cicdata, columns = colm)
@@ -88,25 +91,32 @@ if __name__ == "__main__":
 		
 		'Plotting the data'
 		ax = plt.subplot(nrows, ncols, p+1)
-		ax.set_title(f"Sub box size: {nw_boxsize} - Particles: {pardata:.2e}")
+		ax.set_title(f"Sub box size: {nw_boxsize}")
 		# ax.set_xscale('log')
 
-		# boxdata = np.log(boxdata["D"]+1)
-		boxdata = boxdata["D"]
+
+
+		print(boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)])
+		testboxdata =  boxdata
+		boxdata = boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)].sum(axis=1)
+		print(boxdata)
+		# boxdata = boxdata["D"]
 		
 		'The data is binned and x and y values are obtained'
-		# mindata = min(boxdata["D"])
-		# maxdata = max(boxdata["D"])
-		# step =int((maxdata - mindata)/50)
-		# cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
-		cicbins = 30
+		mindata = min(boxdata)
+		maxdata = max(boxdata)
+		if (maxdata - mindata) <=20:
+			step = 1
+		else:	
+			step =int((maxdata - mindata)/20)
+		cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
+		# cicbins = 30
 
 		hist_y, hist_edge = np.histogram(boxdata, bins=cicbins)
-		print(hist_edge)
 
 		normfactor = ((hist_edge[1]-hist_edge[0])*np.sum(hist_y))
 
-		print(f"hiat sum {np.sum(hist_y)} - normfactor: {normfactor}")
+		print(f"hist sum {np.sum(hist_y)} - normfactor: {normfactor}")
 		y_value = hist_y / normfactor
 		
 		x_center = (0.5*(hist_edge[1:] + hist_edge[:-1]))
@@ -119,14 +129,15 @@ if __name__ == "__main__":
 		ax.errorbar(x_value, y_value, yerr=errorbar, fmt='k.')
 
 		 # Curve Fitting GEV
-		print(f"Calculating fitting for GEV {nw_boxsize}")
-		popt_gev, pcov_gev = curve_fit(gev_delta, x_value, y_value, 
-			p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata)))
-		print(f"Plotting GEV {nw_boxsize}")
+		# print(f"Calculating fitting for GEV {nw_boxsize}")
+		# popt_gev, pcov_gev = curve_fit(gev_A, x_value, y_value, 
+		# 	p0 =(skew(boxdata),np.mean(boxdata),np.std(boxdata)))
+		
+		# print(f"Plotting GEV {nw_boxsize}")
 		# xvalue = np.arange(-1,1,0.1 )
-		xvalue = x_value
-		# ax.plot(xvalue, gev(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
-		ax.plot(xvalue, gev_delta(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
+		# xvalue = x_value
+		# ax.plot(xvalue, gev_A(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
+		# ax.plot(xvalue, gev_delta(xvalue, *popt_gev), 'g--', label='GEV (Fit): \nxi=%5.3f, \nnu_g=%5.3f, \nsig_g=%5.3f' % tuple(popt_gev))
 
 		# # Curve Fitting GEV SciP
 		# print(f"Calculating fitting for Genextreme {nw_boxsize}")
@@ -149,8 +160,8 @@ if __name__ == "__main__":
 
 
 		# Curve Fitting Poisson
-		# popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata["P"]),))
-		# ax.plot(x_value, pois(x_value, np.mean(boxdata["P"])), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata["P"])}' )
+		popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata)))
+		ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
 
 		# Curve Fitting Normal Dist
 		# popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
