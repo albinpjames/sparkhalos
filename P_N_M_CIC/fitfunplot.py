@@ -58,7 +58,7 @@ if __name__ == "__main__":
 	    top=0.8,
 	    wspace=0.2,
 	    hspace=0.5)
-	plt.suptitle(f"Halos CIC of {params.name} of size {params.boxsize} MPc/h in delta rabge {dmin} to {dmax}", fontsize=15, y=0.95)
+	plt.suptitle(f"Halos CIC of {params.name} of size {params.boxsize} MPc/h in delta range {dmin} to {dmax}", fontsize=15, y=0.95)
 
 	# ax = plt.subplot(nrows, ncols, 1)
 	# ax.axis('off')
