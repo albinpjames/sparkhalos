@@ -124,8 +124,7 @@ def mass_pos(params, redshift, mode="all"):
                 data = _read1by1(["N", "SO_central_particle"], params, redshift)
 
         # Calculating the total mass of the halo
-        print("converting to mass")
-        data["N"] = data["N"] 
+        # print("converting to mass")
         # data["N"] = data["N"] * params.mass
         data["SO_central_particle"] += params.boxsize / 2
 

@@ -12,10 +12,11 @@ from sparkhalos.simulations import abacussummit as simulation
 from sparkhalos.simparams.abacussummit import hugebase2000 as simparams
 
 from sparkhalos.hstats.cic import cic, dens_contrast
-from localfiles import getlocation, saveloaction
+from localfiles import getlocation, savelocation
 import numpy as np
 import math
 import os
+import itertools
 
 def mass_pos_cnvrt(halodata):
     halodata = np.lib.recfunctions.structured_to_unstructured(np.array(halodata))
@@ -101,9 +102,12 @@ if __name__ == "__main__":
                 print(f"Particle data is being read for redshift:{redshift}")
                 partdata = simulation.read_particles(params, redshift, [["field","halo"], ["A"]])
                 print(f"No of particles in redshift- {redshift}: {len(partdata)}.")
-                partpos = part_pos_cnvrt(partdata, particles_taken, take_all)
+                # partpos = part_pos_cnvrt(partdata, particles_taken, take_all)
 
                 assert len(partdata) == len(partpos), "The length of particle arrays are different."
+
+                boxbins = np.linspace(0,params.boxsize,4)
+                dbin = boxbins[1] - boxbins[0]
 
         pathsave = saveloaction(params,redshift)
 
@@ -112,32 +116,48 @@ if __name__ == "__main__":
             os.makedirs(pathsave)
 
         for nw_boxsize in nw_boxsizes: 
-
-            print(f"Boxsize being computed: {nw_boxsize}")
-            cutside = int(params.boxsize/nw_boxsize)
-            print(f"The times the box length is cut: {cutside}")
-            totalboxes = int(cutside**3) 
-            print(f"The total number of boxes: {totalboxes}")
-
-            cicdata = np.zeros((totalboxes,halobins+2))
-
-
             binedge = np.logspace(
                 np.log(np.min(halodata["N"])),
                 np.log(np.max(halodata["N"])),
                 halobins + 1,
                 base=math.e)
 
-            for i in range(halobins):
-                data = halodata[["xpos","ypos","zpos"]][(binedge[i] <= halodata["N"]) & (halodata["N"] < binedge[i + 1])]
-                data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
-                cicdata[:,i] = cic(data, params, nw_boxsize)
+            for pos_start in itertools.product(lt,lt,lt):
+                for dy in boxbins:
 
-            cicdata[:,halobins] = cic(partpos, params, nw_boxsize)
-            cicdata[:,halobins+1] = dens_contrast(cicdata[:,halobins], params, nw_boxsize)
+                print(f"Boxsize being computed: {nw_boxsize}")
+                print(f"Part of box being computed: {str(dx)}")
+                cutside = int(dbin**3/nw_boxsize)
+                print(f"The times the box length is cut: {cutside}")
+                totalboxes = int(cutside**3) 
+                print(f"The total number of boxes: {totalboxes}")
 
-            np.save(os.path.join(pathsave,str(nw_boxsize)),cicdata)
-            np.save(os.path.join(pathsave,str(nw_boxsize)+"_mass"),binedge)
+
+                # Filtering data for the small box
+                halodata_fitr = halodata[["N","xpos","ypos","zpos"]][ (halodata["xpos"] >= pos_start[0]) & (halodata["xpos"] < (pos_start[0] + dbin)) &
+                                                                 (halodata["ypos"] >= pos_start[1]) & (halodata["ypos"] < (pos_start[1] + dbin)) &
+                                                                 (halodata["zpos"] >= pos_start[2]) & (halodata["zpos"] < (pos_start[2] + dbin)) ]
+
+                partdata_fitr = partdata["xpos","ypos", "zpos"][ (partdata["xpos"] >= pos_start[0]) & (partdata["xpos"] < (pos_start[0] + dbin)) &
+                                                            (partdata["ypos"] >= pos_start[1]) & (partdata["ypos"] < (pos_start[1] + dbin)) &
+                                                            (partdata["zpos"] >= pos_start[2]) & (partdata["zpos"] < (pos_start[2] + dbin)) ]
+
+
+                cicdata = np.zeros((totalboxes,halobins+2))
+
+                for i in range(halobins):
+                    data = halodata_fitr[["xpos","ypos","zpos"]][(binedge[i] <= halodata["N"]) & (halodata["N"] < binedge[i + 1])]
+                    data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
+                    cicdata[:,i] = cic(data, params, nw_boxsize)
+
+                partpos = np.array([partdata_fitr["xpos"], partdata_fitr["ypos"], partdata_fitr["zpos"]]).T
+
+                cicdata[:,halobins] = cic(partpos, params, nw_boxsize)
+                cicdata[:,halobins+1] = dens_contrast(cicdata[:,halobins], params, nw_boxsize)
+
+                np.save(os.path.join(pathsave,str(nw_boxsize),str(pos_start)),cicdata)
+
+            np.save(os.path.join(pathsave,str(nw_boxsize),"mass_bins"),binedge)
 
         totalhalos = len(halodata)
         totalpart = len(partpos)
