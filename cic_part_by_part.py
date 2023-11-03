@@ -109,7 +109,7 @@ if __name__ == "__main__":
                 boxbins = np.linspace(0,params.boxsize,4)
                 dbin = boxbins[1] - boxbins[0]
 
-        pathsave = saveloaction(params,redshift)
+        pathsave = savelocation(params,redshift)
 
         if not (os.path.exists(pathsave)):
             print("Creating directory to store data.")
