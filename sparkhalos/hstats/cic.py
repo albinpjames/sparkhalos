@@ -89,7 +89,7 @@ def cic_halos(data, params, redshift, nw_boxsize, totalbins):
 
 
 
-def cic(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = False):
+def cic(data, params, nw_boxsize, pos_start, dbin, cic_method ="binned_stat", density_contrast = False):
     match cic_method:
         case "manual":
             print("Calculating CIC Using Maunal Method")
@@ -119,15 +119,21 @@ def cic(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = 
 
         case "binned_stat":  
                 from scipy.stats import binned_statistic_dd 
-                size = params.boxsize
-                cutside = int(params.boxsize/nw_boxsize)
+                size = dbin
+                cutside = int(dbin/nw_boxsize)
 
-                x_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
-                y_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
-                z_bins_dd = np.linspace(0,nw_boxsize*cutside,cutside+1)
-                boxdata = binned_statistic_dd(data
-                    ,values = None, statistic = 'count', 
-                    bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
+                x_bins_dd = pos_start[0] + np.linspace(0,nw_boxsize*cutside,cutside+1)
+                y_bins_dd = pos_start[1] + np.linspace(0,nw_boxsize*cutside,cutside+1)
+                z_bins_dd = pos_start[2] + np.linspace(0,nw_boxsize*cutside,cutside+1)
+                try:
+                    boxdata = binned_statistic_dd(data
+                        ,values = None, statistic = 'count', 
+                        bins =[x_bins_dd, y_bins_dd, z_bins_dd]).statistic
+                except Exception as __e:
+                    print(x_bins_dd)
+                    print(y_bins_dd)
+                    print(z_bins_dd)
+                    raise __e
 
                 boxdata = boxdata.ravel()
 
@@ -136,8 +142,8 @@ def cic(data, params, nw_boxsize, cic_method ="binned_stat", density_contrast = 
 
     return boxdata
 
-def dens_contrast(boxdata,params,nw_boxsize):
-    size = params.boxsize
+def dens_contrast(boxdata,params,nw_boxsize,pos_start, dbin):
+    size = dbin
     cell_avg = np.sum(boxdata) * (nw_boxsize**3) / (size**3)
     celldensity = (boxdata - cell_avg)/cell_avg
     return celldensity

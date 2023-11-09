@@ -104,30 +104,29 @@ if __name__ == "__main__":
                 print(f"No of particles in redshift- {redshift}: {len(partdata)}.")
                 # partpos = part_pos_cnvrt(partdata, particles_taken, take_all)
 
-                assert len(partdata) == len(partpos), "The length of particle arrays are different."
-
-                boxbins = np.linspace(0,params.boxsize,4)
+                boxbins = np.linspace(0,params.boxsize,5)
+                boxbins = boxbins[0:-1]
                 dbin = boxbins[1] - boxbins[0]
 
-        pathsave = savelocation(params,redshift)
-
-        if not (os.path.exists(pathsave)):
-            print("Creating directory to store data.")
-            os.makedirs(pathsave)
-
-        for nw_boxsize in nw_boxsizes: 
-            binedge = np.logspace(
+                binedge = np.logspace(
                 np.log(np.min(halodata["N"])),
                 np.log(np.max(halodata["N"])),
                 halobins + 1,
                 base=math.e)
 
-            for pos_start in itertools.product(lt,lt,lt):
-                for dy in boxbins:
+        pathsave = savelocation(params,redshift)
+
+        for nw_boxsize in nw_boxsizes: 
+            nwboxloc = os.path.join(pathsave,str(nw_boxsize))
+            if not (os.path.exists(nwboxloc)):
+                print("Creating directory to store data.")
+                os.makedirs(nwboxloc)
+
+            for pos_start in itertools.product(boxbins,boxbins,boxbins):
 
                 print(f"Boxsize being computed: {nw_boxsize}")
-                print(f"Part of box being computed: {str(dx)}")
-                cutside = int(dbin**3/nw_boxsize)
+                print(f"Part of box being computed: {str(pos_start)}")
+                cutside = int(dbin/nw_boxsize)
                 print(f"The times the box length is cut: {cutside}")
                 totalboxes = int(cutside**3) 
                 print(f"The total number of boxes: {totalboxes}")
@@ -146,18 +145,20 @@ if __name__ == "__main__":
                 cicdata = np.zeros((totalboxes,halobins+2))
 
                 for i in range(halobins):
-                    data = halodata_fitr[["xpos","ypos","zpos"]][(binedge[i] <= halodata["N"]) & (halodata["N"] < binedge[i + 1])]
+                    data = halodata_fitr[["xpos","ypos","zpos"]][(binedge[i] <= halodata_fitr["N"]) & (halodata_fitr["N"] < binedge[i + 1])]
                     data = np.array([data['xpos'], data['ypos'], data['zpos']]).T
-                    cicdata[:,i] = cic(data, params, nw_boxsize)
+                    if len(data) == 0:
+                        continue
+                    cicdata[:,i] = cic(data, params, nw_boxsize, pos_start, dbin)
 
                 partpos = np.array([partdata_fitr["xpos"], partdata_fitr["ypos"], partdata_fitr["zpos"]]).T
 
-                cicdata[:,halobins] = cic(partpos, params, nw_boxsize)
-                cicdata[:,halobins+1] = dens_contrast(cicdata[:,halobins], params, nw_boxsize)
+                cicdata[:,halobins] = cic(partpos, params, nw_boxsize, pos_start, dbin)
+                cicdata[:,halobins+1] = dens_contrast(cicdata[:,halobins], params, nw_boxsize, pos_start, dbin)
 
-                np.save(os.path.join(pathsave,str(nw_boxsize),str(pos_start)),cicdata)
+                np.save(os.path.join(nwboxloc,str(pos_start)),cicdata)
 
-            np.save(os.path.join(pathsave,str(nw_boxsize),"mass_bins"),binedge)
+            np.save(os.path.join(nwboxloc,"mass_bins"),binedge)
 
         totalhalos = len(halodata)
         totalpart = len(partpos)
@@ -166,10 +167,10 @@ if __name__ == "__main__":
         lrhalomass = np.max(halodata["N"])
         lrhalono = np.max(halopartno)
         with open(os.path.join(pathsave,"mass_data.txt"),"w") as file:
-            file.write(f"Number of halos = {totalhalos}" + "\n" 
-                    f"Number of particles = {totalpart}" + "\n" 
-                    f"Smallest Mass of Halo = {smhalomass:.18E}" + "\n" 
-                    f"No: of particles in smallest halo = {smhalono}" + "\n"
-                    f"Largest Mass of halo = {lrhalomass:.18E}" + "\n"
-                    f"No: of particles in largest halo =  {lrhalono}" + "\n"
-                    f"Mass of a particle = {params.mass:.18E}" ) 
+            file.write('\n'.join([f"Number of halos = {totalhalos}",
+                                  f"Number of particles = {totalpart}", 
+                                  f"Smallest Mass of Halo = {smhalomass:.18E}", 
+                                  f"No: of particles in smallest halo = {smhalono}",
+                                  f"Largest Mass of halo = {lrhalomass:.18E}",
+                                  f"No: of particles in largest halo =  {lrhalono}",
+                                  f"Mass of a particle = {params.mass:.18E}"       ]) ) 

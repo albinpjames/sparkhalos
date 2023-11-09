@@ -25,7 +25,7 @@ def _readdata(clms, params, redshift):
     # Location of the data
     file = os.path.join(
         params.datadirec,
-        "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+        "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
         + params.type
         + "_"
         + params.cosmo
@@ -55,7 +55,7 @@ def _read1by1(clms, params, redshift):
         if i < 10:
             file = os.path.join(
                 params.datadirec,
-                "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+                "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
                 + params.type
                 + "_"
                 + params.cosmo
@@ -67,7 +67,7 @@ def _read1by1(clms, params, redshift):
         else:
             file = os.path.join(
                 params.datadirec,
-                "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+                "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
                 + params.type
                 + "_"
                 + params.cosmo
@@ -94,120 +94,33 @@ def mass_pos(params, redshift, mode="all"):
     """
 
     print("Reading halo mass position data.")
-    pathsave = os.path.join(
-        params.datadirec,
-        "ProcessedData",
-        "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
-        "halos",
-        "z" + redshift,
-        "halo_info"
+
+    # Extarct mass and position
+    print("Status: Extracting the mass and position of the particles")
+    match mode:
+        case "all":
+            data = _readdata(["N", "SO_central_particle"], params, redshift)
+
+        case "1by1":
+            data = _read1by1(["N", "SO_central_particle"], params, redshift)
+
+    # Calculating the total mass of the halo
+    # print("converting to mass")
+    # data["N"] = data["N"] * params.mass
+    data["SO_central_particle"] += params.boxsize / 2
+
+    data.add_columns(
+        [
+            data["SO_central_particle"][:, 0],
+            data["SO_central_particle"][:, 1],
+            data["SO_central_particle"][:, 2],
+        ],
+        names=["xpos", "ypos", "zpos"],
     )
 
-    print("Checking if already processed data exists.")
-    if os.path.exists(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat")):
-        print("Reading processed data.")
-        return ascii.read(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"))
+    del data["SO_central_particle"]
+    return data
 
-    else:
-        # check the directory does not exist
-        if not (os.path.exists(pathsave)):
-            print("Creating directory to store data.")
-            os.makedirs(pathsave)
-
-        # Extarct mass and position
-        print("Status: Extracting the mass and position of the particles")
-        match mode:
-            case "all":
-                data = _readdata(["N", "SO_central_particle"], params, redshift)
-
-            case "1by1":
-                data = _read1by1(["N", "SO_central_particle"], params, redshift)
-
-        # Calculating the total mass of the halo
-        # print("converting to mass")
-        # data["N"] = data["N"] * params.mass
-        data["SO_central_particle"] += params.boxsize / 2
-
-        data.add_columns(
-            [
-                data["SO_central_particle"][:, 0],
-                data["SO_central_particle"][:, 1],
-                data["SO_central_particle"][:, 2],
-            ],
-            names=["xpos", "ypos", "zpos"],
-        )
-
-        del data["SO_central_particle"]
-
-        print("Writing the processed data to the file")
-        ascii.write(data, os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
-        return data
-
-def _readrv_save(params, redshift, type="field", subset="A"):
-    """This function reads the field data from abacus summit simulation
-    type : field or halo
-    subset : A or B
-    """
-
-    pathsave = os.path.join(
-        params.datadirec,
-        "ProcessedData",
-        "AbacusSummit_" + params.type + "_" + params.cosmo + "_" + params.intcont,
-        "halos",
-        "z" + redshift,
-        type + "_rv" + subset
-        )
-
-    print("Checking if already processed data exists.")
-    if os.path.exists(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat")):
-        print("Reading processed data.")
-        return ascii.read(os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"))
-
-
-    else:
-        # check the directory does not exist
-        if not (os.path.exists(pathsave)):
-            print("Creating directory to store data.")
-            os.makedirs(pathsave)
-
-        # Location of the data
-        path = os.path.join(
-            params.datadirec,
-            "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
-            + params.type
-            + "_"
-            + params.cosmo
-            + "_"
-            + params.intcont,
-            "halos/z" + redshift,
-            type + "_rv_" + subset
-        )
-
-        files = Path(path).glob('*.asdf')
-        for i, file in enumerate(files):
-            if i == 0:
-                cat = read_asdf(file, cleaned=False)
-            else:
-                print(f"reading {i} file")
-                cat_read = read_asdf(file, cleaned=False) # Reads the data
-                cat =  vstack([cat, cat_read])
-                del cat_read
-
-        cat.add_columns(
-            [
-                cat["pos"][:, 0],
-                cat["pos"][:, 1],
-                cat["pos"][:, 2],
-            ],
-            names=["xpos", "ypos", "zpos"],
-        )
-        del cat["pos"]
-        del cat["vel"]
-
-        print(cat)
-        print("Writing the processed data to the file")
-        ascii.write(cat, os.path.join(pathsave, params.filename_notime + "_" + redshift + ".dat"), overwrite=True)
-        return cat
 
 def _readrv(params, redshift, type="field", subset="A"):
     """This function reads the field data from abacus summit simulation
@@ -218,7 +131,7 @@ def _readrv(params, redshift, type="field", subset="A"):
     # Location of the data
     path = os.path.join(
         params.datadirec,
-        "Simulations/AbacusSummit Public Data Access/AbacusSummit_"
+        "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
         + params.type
         + "_"
         + params.cosmo
@@ -249,8 +162,6 @@ def _readrv(params, redshift, type="field", subset="A"):
     del cat["pos"]
     del cat["vel"]
 
-    print(cat)
-    print("Writing the processed data to the file")
     return cat
 
 def read_particles(params, redshift, toread):
