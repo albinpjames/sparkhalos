@@ -151,6 +151,7 @@ def _readrv(params, redshift, type="field", subset="A"):
             cat =  vstack([cat, cat_read])
             del cat_read
 
+    cat["pos"] += params.boxsize / 2
     cat.add_columns(
         [
             cat["pos"][:, 0],

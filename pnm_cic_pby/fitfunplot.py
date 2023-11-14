@@ -28,6 +28,8 @@ from scipy.optimize import curve_fit
 
 import numpy as np
 import pandas as pd
+import os
+import itertools
 
 if __name__ == "__main__":
 
@@ -36,11 +38,11 @@ if __name__ == "__main__":
 	""" Intilaises the simulation parameters for the simulation """
 	datalocation = getlocation()
 	params = SimuParams.init(datalocation, simparams)
-	datalocation = savelocation(params,redshift)
+	pathsave = savelocation(params,redshift)
+
 
 
 	nw_boxsizes = [25,15,10,5,3,1]
-	cicbins = 20
 	size = params.boxsize
 	
 
@@ -49,6 +51,7 @@ if __name__ == "__main__":
 
 	dmin = 0.0
 	dmax = 0.2
+
 	# Intalizing the figure
 	print("The figure is intalised")
 	plt.figure(figsize=(8, nrows * 3), dpi=150)
@@ -74,57 +77,60 @@ if __name__ == "__main__":
 	#                          fontsize=10 
 	#                          )
 
-    boxbins = np.linspace(0,params.boxsize,5)
-    boxbins = boxbins[0:-1]
-    dbin = boxbins[1] - boxbins[0]
+	boxbins = np.linspace(0,params.boxsize,5)
+	boxbins = boxbins[0:-1]
+	dbin = boxbins[1] - boxbins[0]
 
 	for p, nw_boxsize in enumerate(nw_boxsizes): 
+
 		nwboxloc = os.path.join(pathsave,str(nw_boxsize))
-		for pos_start in itertools.product(boxbins,boxbins,boxbins):
-			cicdata = np.load(datalocation + "/" + str(nw_boxsize)  + "/" + str(pos_start) +".npy")
-			massdata = np.load(datalocation + "/" + str(nw_boxsize) + "/"  + "mass_bins" +".npy")
+
+		for i, pos_start in enumerate(itertools.product(boxbins,boxbins,boxbins)):
+			cicdata = np.load(nwboxloc + "/" + str(pos_start) +".npy")
+			massdata = np.load(nwboxloc + "/"  + "mass_bins" +".npy")
 
 			colm = ["M{}".format(i) for i in range(1,21)]
 			massbins = ["M{}".format(i) for i in range(1,21)]
 			colm.append("P")
 			colm.append("D")
 			boxdata = pd.DataFrame(cicdata, columns = colm)
+			del cicdata
 
 			pardata = sum(boxdata["P"])
 			print(f"Calculating for boxsize {nw_boxsize} with particles: {pardata:.1e}")
 
-		
+			boxdata = boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)].sum(axis=1)
+			
+			if (i == 0):
+				mindata = min(boxdata)
+				maxdata = max(boxdata)
+				if (maxdata - mindata) <=20:
+					step = 1
+				else:	
+					step =int((maxdata - mindata)/20)
+				cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
+
+			meanboxdata = np.mean(boxdata) if meanboxdata is None else (meanboxdata + np.mean(boxdata))/2
+
+			hist_l, hist_edge = np.histogram(boxdata, bins=cicbins)
+			hist_y = hist_l if hist_y is None else hist_y + hist_l
+
+
+			del boxdata
+
+
 		'Plotting the data'
 		ax = plt.subplot(nrows, ncols, p+1)
 		ax.set_title(f"Sub box size: {nw_boxsize}")
 		# ax.set_xscale('log')
 
 
-
-		print(boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)])
-		testboxdata =  boxdata
-		boxdata = boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)].sum(axis=1)
-		print(boxdata)
-		# boxdata = boxdata["D"]
-		
-		'The data is binned and x and y values are obtained'
-		mindata = min(boxdata)
-		maxdata = max(boxdata)
-		if (maxdata - mindata) <=20:
-			step = 1
-		else:	
-			step =int((maxdata - mindata)/20)
-		cicbins = np.arange(mindata -0.5, maxdata +0.5, step)
-		# cicbins = 30
-
-		hist_y, hist_edge = np.histogram(boxdata, bins=cicbins)
-
-		normfactor = ((hist_edge[1]-hist_edge[0])*np.sum(hist_y))
+		normfactor = ((cicbins[1]-cicbins[0])*np.sum(hist_y))
 
 		print(f"hist sum {np.sum(hist_y)} - normfactor: {normfactor}")
 		y_value = hist_y / normfactor
 		
-		x_center = (0.5*(hist_edge[1:] + hist_edge[:-1]))
+		x_center = (0.5*(cicbins[1:] + cicbins[:-1]))
 		x_value = x_center
 
 		# ax.scatter(x_value,y_value)
@@ -165,8 +171,8 @@ if __name__ == "__main__":
 
 
 		# Curve Fitting Poisson
-		popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(np.mean(boxdata)))
-		ax.plot(x_value, pois(x_value, np.mean(boxdata)), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {np.mean(boxdata)}' )
+		popt_pois, pcov_pois = curve_fit(pois, x_value, y_value, p0=(meanboxdata))
+		ax.plot(x_value, pois(x_value, popt_pois), 'b--', label=f'Mean (Poisson Fit):{popt_pois} \n Actual Mean {meanboxdata}' )
 
 		# Curve Fitting Normal Dist
 		# popt_norm, pcov_norm = curve_fit(normfun, x_value, y_value, p0 = (np.mean(boxdata), np.std(boxdata)) )
@@ -174,4 +180,5 @@ if __name__ == "__main__":
 
 		ax.legend(loc="upper right", fontsize=4)
 
+	plt.savefig("pnm.png",  bbox_inches='tight')
 	plt.show()
