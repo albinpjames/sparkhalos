@@ -50,33 +50,22 @@ def _read1by1(clms, params, redshift):
     print("Status: Reading the files")
 
     data = Table()
-    for i in range(params.fno_s, params.fno_e + 1):
-        print("Procesing file", i)
-        if i < 10:
-            file = os.path.join(
-                params.datadirec,
-                "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
-                + params.type
-                + "_"
-                + params.cosmo
-                + "_"
-                + params.intcont,
-                "halos/z" + redshift,
-                "halo_info/halo_info_00" + str(i) + ".asdf",
-            )
-        else:
-            file = os.path.join(
-                params.datadirec,
-                "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
-                + params.type
-                + "_"
-                + params.cosmo
-                + "_"
-                + params.intcont,
-                "halos/z" + redshift,
-                "halo_info/halo_info_0" + str(i) + ".asdf",
-            )
 
+    # Location of the data
+    path = os.path.join(
+            params.datadirec,
+            "Simulations/AbacusSummit_Public_Data_Access/AbacusSummit_"
+            + params.type
+            + "_"
+            + params.cosmo
+            + "_"
+            + params.intcont,
+            "halos/z" + redshift,
+            "halo_info"
+    )
+
+    files = Path(path).glob('*.asdf')
+    for file in files:
         cat = CompaSOHaloCatalog(file, cleaned=False)
         data = vstack([data, cat.halos[clms]])
         del cat
@@ -84,7 +73,7 @@ def _read1by1(clms, params, redshift):
     return data
 
 
-def mass_pos(params, redshift, mode="all"):
+def mass_pos(params, redshift, mode="1by1"):
     """This function extracts the mass and position of the particles in the simulation.
 
     Parameters:

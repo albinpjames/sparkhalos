@@ -84,6 +84,8 @@ if __name__ == "__main__":
 	for p, nw_boxsize in enumerate(nw_boxsizes): 
 
 		nwboxloc = os.path.join(pathsave,str(nw_boxsize))
+		meanboxdata = None
+		hist_y = None
 
 		for i, pos_start in enumerate(itertools.product(boxbins,boxbins,boxbins)):
 			cicdata = np.load(nwboxloc + "/" + str(pos_start) +".npy")
@@ -99,7 +101,8 @@ if __name__ == "__main__":
 			pardata = sum(boxdata["P"])
 			print(f"Calculating for boxsize {nw_boxsize} with particles: {pardata:.1e}")
 
-			boxdata = boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)].sum(axis=1)
+			# boxdata = boxdata[massbins][(boxdata['D']>dmin) & (boxdata['D']<dmax)].sum(axis=1)
+			boxdata = boxdata[massbins].sum(axis=1)
 			
 			if (i == 0):
 				mindata = min(boxdata)
@@ -124,7 +127,8 @@ if __name__ == "__main__":
 		ax.set_title(f"Sub box size: {nw_boxsize}")
 		# ax.set_xscale('log')
 
-
+		totalhalos = np.sum(hist_y)
+		print(f"{totalhalos=}, {hist_y=}")
 		normfactor = ((cicbins[1]-cicbins[0])*np.sum(hist_y))
 
 		print(f"hist sum {np.sum(hist_y)} - normfactor: {normfactor}")
@@ -179,6 +183,7 @@ if __name__ == "__main__":
 		# ax.plot(x_value, normfun(x_value, *popt_norm), 'b--', label='Normal (Fit): \nn=%5.3f, sig=%5.3f' % tuple(popt_norm))
 
 		ax.legend(loc="upper right", fontsize=4)
+		plt.savefig(f"{nw_boxsize}_pn.png",  bbox_inches='tight')
 
-	plt.savefig("pnm.png",  bbox_inches='tight')
+	
 	plt.show()
