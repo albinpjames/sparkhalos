@@ -32,8 +32,6 @@ test100 = {
     "cosmo": "rand",  # The cosmology used in the simulation
     "intcont": "uniform",  # The initial condition used for the simulation
     "boxsize": 100,  # The box size of the simulation
-    "fno_s": None,  # If data fragamneted to multiple files, starting file number
-    "fno_e": None,  # If data fragamneted to multiple files, ending file number
     "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
 }
 
@@ -43,8 +41,6 @@ test500 = {
     "cosmo": "rand",  # The cosmology used in the simulation
     "intcont": "uniform",  # The initial condition used for the simulation
     "boxsize": 500,  # The box size of the simulation
-    "fno_s": None,  # If data fragamneted to multiple files, starting file number
-    "fno_e": None,  # If data fragamneted to multiple files, ending file number
     "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
 }
 
@@ -54,7 +50,5 @@ test2000 = {
     "cosmo": "rand",  # The cosmology used in the simulation
     "intcont": "uniform",  # The initial condition used for the simulation
     "boxsize": 2000,  # The box size of the simulation
-    "fno_s": None,  # If data fragamneted to multiple files, starting file number
-    "fno_e": None,  # If data fragamneted to multiple files, ending file number
     "mass": 2.109081520453063 * 10**9,  # The mass of the particles in the simulation
 }
